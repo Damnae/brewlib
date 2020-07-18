@@ -16,9 +16,17 @@ namespace BrewLib.Util
 
         public override void Write(string message) => log(message);
         public override void WriteLine(string message) => log(message);
+        public override void WriteLine(string message, string category) => log(message, category);
 
-        private void log(string message)
+        private void log(string message, string category = null)
         {
+            var path = this.path;
+            if (category != null)
+            {
+
+                return;
+            }
+
             try
             {
                 lock (logLock)

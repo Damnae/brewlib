@@ -12,6 +12,7 @@ namespace BrewLib.ScreenLayers
         protected double TransitionInDuration = 0.25f;
         protected double TransitionOutDuration = 0.25f;
         protected double TransitionProgress = 0f;
+        public double MinTween;
 
         public State CurrentState = State.Hidden;
 
@@ -117,6 +118,10 @@ namespace BrewLib.ScreenLayers
             }
         }
 
+        public virtual void FixedUpdate()
+        {
+        }
+        
         public virtual void Draw(DrawContext drawContext, double tween)
         {
         }

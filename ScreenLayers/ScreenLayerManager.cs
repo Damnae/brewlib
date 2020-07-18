@@ -5,6 +5,7 @@ using OpenTK;
 using OpenTK.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace BrewLib.ScreenLayers
 {
@@ -28,6 +29,8 @@ namespace BrewLib.ScreenLayers
 
         public Color4 BackgroundColor => Color4.Black;
 
+        public event Action<ScreenLayer> LayerAdded;
+
         public ScreenLayerManager(GameWindow window, TimeSource timeSource, object context)
         {
             this.window = window;
@@ -41,6 +44,8 @@ namespace BrewLib.ScreenLayers
         {
             layer.Manager = this;
             layers.Add(layer);
+
+            LayerAdded?.Invoke(layer);
             layer.Load();
 
             var width = Math.Max(1, window.Width);
@@ -93,7 +98,7 @@ namespace BrewLib.ScreenLayers
             }
         }
 
-        public void Update()
+        public void Update(bool isFixedRateUpdate)
         {
             var active = window.Focused;
             if (!active) changeFocus(null);
@@ -123,6 +128,11 @@ namespace BrewLib.ScreenLayers
                     }
                 }
 
+                if (isFixedRateUpdate)
+                {
+                    layer.FixedUpdate();
+                    layer.MinTween = 0;
+                }
                 layer.Update(top, covered);
 
                 if (!layer.IsPopup)
@@ -145,7 +155,10 @@ namespace BrewLib.ScreenLayers
                 if (layer.CurrentState == ScreenLayer.State.Hidden)
                     continue;
 
-                layer.Draw(drawContext, tween);
+                var layerTween = Math.Max(layer.MinTween, tween);
+                layer.MinTween = layerTween;
+
+                layer.Draw(drawContext, layerTween);
             }
         }
 

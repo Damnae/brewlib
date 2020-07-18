@@ -11,14 +11,14 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
     public class PrimitiveStreamerVbo<TPrimitive> : PrimitiveStreamer<TPrimitive> 
         where TPrimitive : struct
     {
-        protected VertexDeclaration vertexDeclaration;
+        private VertexDeclaration vertexDeclaration;
         private int primitiveSize;
 
-        protected int vertexBufferId = -1;
-        protected int indexBufferId = -1;
+        private int vertexBufferId = -1;
+        private int indexBufferId = -1;
 
-        protected Shader currentShader;
-        protected bool bound;
+        private Shader currentShader;
+        private bool bound;
         
         public int DiscardedBufferCount { get; protected set; }
         public int BufferWaitCount { get; protected set; }

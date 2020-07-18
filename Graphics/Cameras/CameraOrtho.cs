@@ -85,7 +85,7 @@ namespace BrewLib.Graphics.Cameras
 
             projection =
                 Matrix4.CreateTranslation(orthoViewport.X - extendedViewport.Width * 0.5f, orthoViewport.Y - (yDown ? -extendedViewport.Height : extendedViewport.Height) * 0.5f, 0) *
-                Matrix4.CreateOrthographic(extendedViewport.Width, extendedViewport.Height, NearPlane, FarPlane);
+                Matrix4.CreateOrthographic(extendedViewport.Width * zoom, extendedViewport.Height * zoom, NearPlane, FarPlane);
             view =
                 Matrix4.LookAt(Position, Position + Forward, Up);
         }

@@ -1,7 +1,10 @@
 ﻿using BrewLib.Data;
 using ManagedBass;
 using ManagedBass.Fx;
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
 
 namespace BrewLib.Audio
 {
@@ -16,8 +19,37 @@ namespace BrewLib.Audio
         internal AudioStream(AudioManager manager, string path, ResourceContainer resourceContainer) : base(manager)
         {
             this.path = path;
+            var flags = BassFlags.Decode | BassFlags.Prescan;
 
-            decodeStream = Bass.CreateStream(path, 0, 0, BassFlags.Decode | BassFlags.Prescan);
+            decodeStream = Bass.CreateStream(path, 0, 0, flags);
+            if (decodeStream == 0)
+            {
+                var resourceStream = resourceContainer.GetStream(path);
+                if (resourceStream != null)
+                {
+                    var readBuffer = new byte[32768];
+                    var procedures = new FileProcedures
+                    {
+                        Read = (buffer, length, user) =>
+                        {
+                            if (length > readBuffer.Length)
+                                readBuffer = new byte[length];
+
+                            if (!resourceStream.CanRead)
+                                return 0;
+
+                            var readBytes = resourceStream.Read(readBuffer, 0, length);
+                            Marshal.Copy(readBuffer, 0, buffer, readBytes);
+                            return readBytes;
+                        },
+                        Length = user => resourceStream.Length,
+                        Seek = (offset, user) => resourceStream.Seek(offset, SeekOrigin.Begin) == offset,
+                        Close = user => resourceStream.Dispose(),
+                    };
+                    decodeStream = Bass.CreateStream(StreamSystem.NoBuffer, flags, procedures, IntPtr.Zero);
+                }
+            }
+
             if (decodeStream == 0)
             {
                 Trace.WriteLine($"Failed to load audio stream ({path}): {Bass.LastError}");

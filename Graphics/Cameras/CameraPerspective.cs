@@ -25,6 +25,11 @@ namespace BrewLib.Graphics.Cameras
             FarPlane = 1000;
         }
 
+        public float NearPlaneHeight => Viewport.Height / (float)(2 * Math.Tan(0.5 * FieldOfView * Math.PI / 180));
+
+        // XXX This is supposed to be correct but doesn't work?
+        public float NearPlaneHeight2 => NearPlane * 2 * (float)Math.Tan(0.5 * fieldOfView * Math.PI / 180);
+
         protected override void Recalculate(out Matrix4 view, out Matrix4 projection, out Rectangle internalViewport, out Rectangle extendedViewport)
         {
             var screenViewport = Viewport;

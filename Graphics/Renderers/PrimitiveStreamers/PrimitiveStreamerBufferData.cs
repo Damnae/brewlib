@@ -22,10 +22,10 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
             Debug.Assert(primitiveCount <= primitives.Length);
             Debug.Assert(drawCount % primitiveCount == 0);
 
-            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(primitiveCount * primitiveSize), primitives, BufferUsageHint.StreamDraw);
+            GL.BufferData(BufferTarget.ArrayBuffer, (IntPtr)(primitiveCount * PrimitiveSize), primitives, BufferUsageHint.StreamDraw);
             DiscardedBufferCount++;
 
-            if (indexBufferId != -1)
+            if (IndexBufferId != -1)
                 GL.DrawElements(primitiveType, drawCount, DrawElementsType.UnsignedShort, 0);
             else
                 GL.DrawArrays(primitiveType, 0, drawCount);
@@ -34,7 +34,7 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
         protected override void internalBind(Shader shader)
         {
             base.internalBind(shader);
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferId);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferId);
         }
 
         public new static bool HasCapabilities()

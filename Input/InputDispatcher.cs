@@ -38,7 +38,7 @@ namespace BrewLib.Input
             foreach (var handler in handlers)
                 handler.OnFocusChanged(e);
         }
-        
+
         public bool OnClickDown(MouseButtonEventArgs e)
         {
             foreach (var handler in handlers)
@@ -89,6 +89,28 @@ namespace BrewLib.Input
         {
             foreach (var handler in handlers)
                 if (handler.OnKeyPress(e))
+                    return true;
+            return false;
+        }
+
+        public virtual void OnGamepadConnected(GamepadEventArgs e)
+        {
+            foreach (var handler in handlers)
+                handler.OnGamepadConnected(e);
+        }
+
+        public virtual bool OnGamepadButtonDown(GamepadButtonEventArgs e)
+        {
+            foreach (var handler in handlers)
+                if (handler.OnGamepadButtonDown(e))
+                    return true;
+            return false;
+        }
+
+        public virtual bool OnGamepadButtonUp(GamepadButtonEventArgs e)
+        {
+            foreach (var handler in handlers)
+                if (handler.OnGamepadButtonUp(e))
                     return true;
             return false;
         }

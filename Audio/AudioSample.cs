@@ -27,19 +27,21 @@ namespace BrewLib.Audio
             var bytes = resourceContainer?.GetBytes(path);
             if (bytes != null)
             {
-                sample = Bass.SampleLoad(bytes, 0, 0, MaxSimultaneousPlayBacks, BassFlags.SampleOverrideLongestPlaying);
+                sample = Bass.SampleLoad(bytes, 0, bytes.Length, MaxSimultaneousPlayBacks, BassFlags.SampleOverrideLongestPlaying);
                 if (sample != 0) return;
             }
 
             Trace.WriteLine($"Failed to load audio sample ({path}): {Bass.LastError}");
         }
 
-        public void Play(float volume = 1)
+        public void Play(float volume = 1, float pitch = 1, float pan = 0)
         {
             if (sample == 0) return;
             var channel = new AudioChannel(Manager, Bass.SampleGetChannel(sample), true)
             {
                 Volume = volume,
+                Pitch = pitch,
+                Pan = pan,
             };
             Manager.RegisterChannel(channel);
             channel.Playing = true;

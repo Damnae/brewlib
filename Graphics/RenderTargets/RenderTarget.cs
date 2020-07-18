@@ -1,4 +1,5 @@
 ﻿using BrewLib.Graphics.Textures;
+using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Diagnostics;
@@ -120,6 +121,8 @@ namespace BrewLib.Graphics.RenderTargets
             }
         }
 
+        public Color4 ClearColor = new Color4(0, 0, 0, 0);
+
         public RenderTarget(RenderbufferStorage? renderBufferType = null)
             : this(0, 0)
         {
@@ -165,7 +168,7 @@ namespace BrewLib.Graphics.RenderTargets
             if (clear)
             {
                 // XXX need GL.DepthMask(true); to clear depth, but setting it here may cause issues with renderstate cache
-                GL.ClearColor(0, 0, 0, 0);
+                GL.ClearColor(ClearColor.R, ClearColor.G, ClearColor.B, ClearColor.A);
                 GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit | ClearBufferMask.StencilBufferBit);
             }
 

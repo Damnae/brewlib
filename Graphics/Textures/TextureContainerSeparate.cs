@@ -15,6 +15,8 @@ namespace BrewLib.Graphics.Textures
         public IEnumerable<string> ResourceNames
             => textures.Where(e => e.Value != null).Select(e => e.Key);
 
+        public event ResourceLoadedDelegate<Texture2dRegion> ResourceLoaded;
+
         public TextureContainerSeparate(ResourceContainer resourceContainer = null, TextureOptions textureOptions = null)
         {
             this.resourceContainer = resourceContainer;
@@ -28,6 +30,7 @@ namespace BrewLib.Graphics.Textures
             {
                 texture = Texture2d.Load(filename, resourceContainer, textureOptions);
                 textures.Add(filename, texture);
+                ResourceLoaded?.Invoke(filename, texture);
             }
             return texture;
         }

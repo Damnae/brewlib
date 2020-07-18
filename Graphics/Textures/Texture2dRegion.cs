@@ -1,5 +1,6 @@
 ﻿using OpenTK;
 using System;
+using System.Drawing;
 
 namespace BrewLib.Graphics.Textures
 {
@@ -12,6 +13,9 @@ namespace BrewLib.Graphics.Textures
         public BindableTexture BindableTexture => texture;
 
         private Box2 bounds;
+        public Box2 Bounds => bounds;
+        public float X => bounds.Left;
+        public float Y => bounds.Top;
         public float Width => bounds.Width;
         public float Height => bounds.Height;
         public Vector2 Size => new Vector2(bounds.Width, bounds.Height);
@@ -25,12 +29,31 @@ namespace BrewLib.Graphics.Textures
             this.description = description;
         }
 
+        public virtual void Update(Bitmap bitmap, int x, int y, TextureOptions textureOptions)
+        {
+            if (texture == null)
+                throw new InvalidOperationException();
+
+            if (x < 0 || y < 0)
+                throw new ArgumentOutOfRangeException();
+
+            var updateX = (int)bounds.Left + x;
+            var updateY = (int)bounds.Top + y;
+
+            if (updateX + bitmap.Width > bounds.Right || updateY + bitmap.Height > bounds.Bottom)
+                throw new ArgumentOutOfRangeException();
+
+            texture.Update(bitmap, updateX, updateY, textureOptions);
+        }
+
         public override string ToString()
             => $"Texture2dRegion#{texture.TextureId} {Description} ({Width}x{Height})";
 
         #region IDisposable Support
 
         private bool disposedValue = false;
+        public bool Disposed => disposedValue;
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)

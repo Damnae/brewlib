@@ -36,6 +36,7 @@ namespace BrewLib.UserInterface
         private Widget tooltipOverlay;
 
         private Dictionary<MouseButton, Widget> dragTargets = new Dictionary<MouseButton, Widget>();
+        private Dictionary<GamepadButton, Widget> gamepadButtonTargets = new Dictionary<GamepadButton, Widget>();
 
         private Widget hoveredWidget;
         public Widget HoveredWidget => hoveredWidget;
@@ -112,10 +113,17 @@ namespace BrewLib.UserInterface
             if (keyboardFocus == widget)
                 keyboardFocus = null;
 
-            var keys = new List<MouseButton>(dragTargets.Keys);
-            foreach (var key in keys)
+            DisableGamepadEvents(widget);
+
+            var dragKeys = new List<MouseButton>(dragTargets.Keys);
+            foreach (var key in dragKeys)
                 if (dragTargets[key] == widget)
                     dragTargets[key] = null;
+
+            var gamepadKeys = new List<GamepadButton>(gamepadButtonTargets.Keys);
+            foreach (var key in gamepadKeys)
+                if (gamepadButtonTargets[key] == widget)
+                    gamepadButtonTargets[key] = null;
         }
 
         public void Draw(DrawContext drawContext)
@@ -274,6 +282,14 @@ namespace BrewLib.UserInterface
 
         #region Input events
 
+        private List<Widget> gamepadTargets = new List<Widget>();
+
+        public void EnableGamepadEvents(Widget widget)
+            => gamepadTargets.Insert(0, widget);
+
+        public void DisableGamepadEvents(Widget widget)
+            => gamepadTargets.Remove(widget);
+
         public void OnFocusChanged(FocusChangedEventArgs e) => RefreshHover();
         public bool OnClickDown(MouseButtonEventArgs e)
         {
@@ -325,6 +341,37 @@ namespace BrewLib.UserInterface
                 var e = new WidgetHoveredEventArgs(true);
                 fire((w, evt) => w.NotifyHoveredWidgetChange(evt, e), hoveredWidget, previousWidget);
             }
+        }
+
+        public void OnGamepadConnected(GamepadEventArgs e) { }
+        public bool OnGamepadButtonDown(GamepadButtonEventArgs e)
+        {
+            var widgetEvent = fire((w, evt) => w.NotifyGamepadButtonDown(evt, e), gamepadTargets, bubbles: false);
+            if (widgetEvent.Handled)
+                gamepadButtonTargets[e.Button] = widgetEvent.Listener;
+
+            return widgetEvent.Handled;
+        }
+        public bool OnGamepadButtonUp(GamepadButtonEventArgs e)
+        {
+            if (gamepadButtonTargets.TryGetValue(e.Button, out Widget buttonTarget))
+            {
+                gamepadButtonTargets[e.Button] = null;
+                return fire((w, evt) => w.NotifyGamepadButtonUp(evt, e), buttonTarget, bubbles: false).Handled;
+            }
+            //return fire((w, evt) => w.NotifyGamepadButtonUp(evt, e), gamepadTargets, bubbles: false).Handled;
+            return false;
+        }
+
+        private static WidgetEvent fire(Func<Widget, WidgetEvent, bool> notify, List<Widget> targets, Widget relatedTarget = null, bool bubbles = true)
+        {
+            foreach (var target in targets)
+            {
+                var widgetEvent = fire(notify, target, relatedTarget, bubbles);
+                if (widgetEvent.Handled)
+                    return widgetEvent;
+            }
+            return new WidgetEvent(targets.Count > 0 ? targets[targets.Count - 1] : null, relatedTarget);
         }
 
         private static WidgetEvent fire(Func<Widget, WidgetEvent, bool> notify, Widget target, Widget relatedTarget = null, bool bubbles = true)

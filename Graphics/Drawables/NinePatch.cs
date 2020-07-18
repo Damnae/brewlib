@@ -40,7 +40,7 @@ namespace BrewLib.Graphics.Drawables
             var verticalScale = (y2 - y1) / (Borders.Bottom - Borders.Top);
 
             var color = Color.WithOpacity(opacity);
-            var renderer = DrawState.Prepare(drawContext.Get<SpriteRenderer>(), camera, RenderStates);
+            var renderer = DrawState.Prepare(drawContext.Get<QuadRenderer>(), camera, RenderStates);
 
             // Center
             if (!BordersOnly && horizontalScale > 0 && verticalScale > 0)

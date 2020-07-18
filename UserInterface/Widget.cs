@@ -1,5 +1,6 @@
 ﻿using BrewLib.Graphics;
 using BrewLib.Graphics.Drawables;
+using BrewLib.Input;
 using BrewLib.UserInterface.Skinning.Styles;
 using BrewLib.Util;
 using OpenTK;
@@ -568,6 +569,16 @@ namespace BrewLib.UserInterface
         public bool NotifyFocusChange(WidgetEvent evt, WidgetFocusEventArgs e)
         {
             Raise(OnFocusChange, evt, e);
+            return false;
+        }
+
+        public event HandleableWidgetEventHandler<GamepadButtonEventArgs> OnGamepadButtonDown;
+        public bool NotifyGamepadButtonDown(WidgetEvent evt, GamepadButtonEventArgs e) => Raise(OnGamepadButtonDown, evt, e);
+
+        public event WidgetEventHandler<GamepadButtonEventArgs> OnGamepadButtonUp;
+        public bool NotifyGamepadButtonUp(WidgetEvent evt, GamepadButtonEventArgs e)
+        {
+            Raise(OnGamepadButtonUp, evt, e);
             return false;
         }
 

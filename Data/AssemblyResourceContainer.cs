@@ -20,11 +20,11 @@ namespace BrewLib.Data
             .Where(name => name.StartsWith($"{baseNamespace}."))
             .Select(name => name.Substring(baseNamespace.Length + 1));
 
-        public AssemblyResourceContainer(Assembly assembly, string baseNamespace, string basePath = null)
+        public AssemblyResourceContainer(Assembly assembly = null, string baseNamespace = null, string basePath = null)
         {
-            this.assembly = assembly;
-            this.baseNamespace = baseNamespace;
-            this.basePath = basePath;
+            this.assembly = assembly ?? Assembly.GetEntryAssembly();
+            this.baseNamespace = baseNamespace ?? $"{this.assembly.EntryPoint.DeclaringType.Namespace}.Resources";
+            this.basePath = basePath ?? "resources";
         }
 
         public Stream GetStream(string path, ResourceSource sources = ResourceSource.Embedded)
@@ -79,6 +79,17 @@ namespace BrewLib.Data
         {
             var bytes = GetBytes(path, sources);
             return bytes != null ? Encoding.UTF8.GetString(bytes).StripUtf8Bom() : null;
+        }
+
+        public SafeWriteStream GetWriteStream(string path)
+        {
+            if (Path.IsPathRooted(path))
+                throw new InvalidOperationException($"Resource paths must be relative ({path})");
+
+            var combinedPath = basePath != null ?
+                Path.Combine(basePath, path) : path;
+
+            return new SafeWriteStream(combinedPath);
         }
     }
 }

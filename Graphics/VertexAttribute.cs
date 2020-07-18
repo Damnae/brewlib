@@ -9,6 +9,7 @@ namespace BrewLib.Graphics
         public const string TextureCoordAttributeName = "a_textureCoord";
         public const string ColorAttributeName = "a_color";
         public const string BoneWeightAttributeName = "a_boneWeight";
+        public const string ScaleAttributeName = "a_scale";
         public const string PresenceAttributeName = "a_presence";
 
         public string Name;
@@ -43,32 +44,38 @@ namespace BrewLib.Graphics
             => $"{Name} {ComponentCount}x {Type} (used as {Usage})";
 
         public static VertexAttribute CreatePosition2d()
-            => new VertexAttribute() { Name = PositionAttributeName, ComponentCount = 2, Usage = AttributeUsage.Position };
+            => new VertexAttribute { Name = PositionAttributeName, ComponentCount = 2, Usage = AttributeUsage.Position };
 
         public static VertexAttribute CreatePosition3d()
-            => new VertexAttribute() { Name = PositionAttributeName, ComponentCount = 3, Usage = AttributeUsage.Position };
+            => new VertexAttribute { Name = PositionAttributeName, ComponentCount = 3, Usage = AttributeUsage.Position };
 
         public static VertexAttribute CreateNormal()
-            => new VertexAttribute() { Name = NormalAttributeName, ComponentCount = 3, Usage = AttributeUsage.Normal };
+            => new VertexAttribute { Name = NormalAttributeName, ComponentCount = 3, Usage = AttributeUsage.Normal };
 
         public static VertexAttribute CreateDiffuseCoord(int index = 0)
-            => new VertexAttribute() { Name = TextureCoordAttributeName + index, ComponentCount = 2, Usage = AttributeUsage.DiffuseMapCoord };
+            => new VertexAttribute { Name = TextureCoordAttributeName + index, ComponentCount = 2, Usage = AttributeUsage.DiffuseMapCoord };
 
         public static VertexAttribute CreateColor(bool packed)
             => packed ?
-                new VertexAttribute() { Name = ColorAttributeName, ComponentCount = 4, ComponentSize = 1, Type = VertexAttribPointerType.UnsignedByte, Normalized = true, Usage = AttributeUsage.Color } :
-                new VertexAttribute() { Name = ColorAttributeName, ComponentCount = 4, Usage = AttributeUsage.Color };
+                new VertexAttribute { Name = ColorAttributeName, ComponentCount = 4, ComponentSize = 1, Type = VertexAttribPointerType.UnsignedByte, Normalized = true, Usage = AttributeUsage.Color } :
+                new VertexAttribute { Name = ColorAttributeName, ComponentCount = 4, Usage = AttributeUsage.Color };
 
         public static VertexAttribute CreateBoneWeight(int index = 0)
-            => new VertexAttribute() { Name = BoneWeightAttributeName + index, ComponentCount = 2, Usage = AttributeUsage.BoneWeight };
+            => new VertexAttribute { Name = BoneWeightAttributeName + index, ComponentCount = 2, Usage = AttributeUsage.BoneWeight };
+
+        public static VertexAttribute CreateScale()
+            => new VertexAttribute { Name = ScaleAttributeName, ComponentCount = 1, Usage = AttributeUsage.Scale };
+
+        public static VertexAttribute CreatePresence()
+            => new VertexAttribute { Name = PresenceAttributeName, ComponentCount = 1, Usage = AttributeUsage.Presence };
 
         public static VertexAttribute CreateVec4(string name, bool packed, AttributeUsage usage)
             => packed ?
-                new VertexAttribute() { Name = name, ComponentCount = 4, ComponentSize = 1, Type = VertexAttribPointerType.UnsignedByte, Normalized = true, Usage = usage } :
-                new VertexAttribute() { Name = name, ComponentCount = 4, Usage = usage };
+                new VertexAttribute { Name = name, ComponentCount = 4, ComponentSize = 1, Type = VertexAttribPointerType.UnsignedByte, Normalized = true, Usage = usage } :
+                new VertexAttribute { Name = name, ComponentCount = 4, Usage = usage };
 
-        public static VertexAttribute CreatePresence()
-            => new VertexAttribute() { Name = PresenceAttributeName, ComponentCount = 1, Usage = AttributeUsage.Presence };
+        public static VertexAttribute CreateFloat(string name, AttributeUsage usage)
+            => new VertexAttribute { Name = name, ComponentCount = 1, Usage = usage };
     }
 
     public enum AttributeUsage
@@ -80,6 +87,7 @@ namespace BrewLib.Graphics
         DiffuseMapCoord,
         NormalMapCoord,
         BoneWeight,
+        Scale,
         Presence
     }
 }

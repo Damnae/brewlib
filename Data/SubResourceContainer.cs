@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using BrewLib.Util;
+using System.Collections.Generic;
 using System.IO;
 
 namespace BrewLib.Data
@@ -27,6 +28,9 @@ namespace BrewLib.Data
         public string GetString(string filename, ResourceSource sources = ResourceSource.Embedded)
             => resourceContainer.GetString(applyPath(filename), sources) ??
             resourceContainer.GetString(filename, sources);
+
+        public SafeWriteStream GetWriteStream(string filename)
+            => resourceContainer.GetWriteStream(applyPath(filename));
 
         private string applyPath(string filename)
             => Path.Combine(path, filename);

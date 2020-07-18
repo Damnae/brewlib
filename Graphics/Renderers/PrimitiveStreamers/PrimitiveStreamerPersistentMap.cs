@@ -32,9 +32,9 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
         protected override void initializeVertexBuffer()
         {
             base.initializeVertexBuffer();
-            vertexBufferSize = minRenderableVertexCount * vertexDeclaration.VertexSize;
+            vertexBufferSize = MinRenderableVertexCount * VertexDeclaration.VertexSize;
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferId);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferId);
 
             GL.BufferStorage(BufferTarget.ArrayBuffer, (IntPtr)vertexBufferSize, IntPtr.Zero, BufferStorageFlags.MapWriteBit | BufferStorageFlags.MapPersistentBit | BufferStorageFlags.MapCoherentBit);
             bufferPointer = GL.MapBufferRange(BufferTarget.ArrayBuffer, IntPtr.Zero, (IntPtr)vertexBufferSize, BufferAccessMask.MapWriteBit | BufferAccessMask.MapPersistentBit | BufferAccessMask.MapCoherentBit);
@@ -45,7 +45,7 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
 
         protected override void internalDispose()
         {
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferId);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferId);
             GL.UnmapBuffer(BufferTarget.ArrayBuffer);
 
             commandSync.Dispose();
@@ -56,12 +56,12 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
 
         public override void Render(PrimitiveType primitiveType, TPrimitive[] primitives, int primitiveCount, int drawCount, bool canBuffer = false)
         {
-            if (!bound) throw new InvalidOperationException("Not bound");
+            if (!Bound) throw new InvalidOperationException("Not bound");
 
             Debug.Assert(primitiveCount <= primitives.Length);
             Debug.Assert(drawCount % primitiveCount == 0);
 
-            var vertexDataSize = primitiveCount * primitiveSize;
+            var vertexDataSize = primitiveCount * PrimitiveSize;
             Debug.Assert(vertexDataSize <= vertexBufferSize);
 
             if (bufferOffset + vertexDataSize > vertexBufferSize)
@@ -86,7 +86,7 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
                 pinnedVertexData.Free();
             }
 
-            if (indexBufferId != -1)
+            if (IndexBufferId != -1)
                 GL.DrawElements(primitiveType, drawCount, DrawElementsType.UnsignedShort, drawOffset * sizeof(ushort));
             else
                 GL.DrawArrays(primitiveType, drawOffset, drawCount);
@@ -99,14 +99,14 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
 
         private void expandVertexBuffer()
         {
-            if (indexBufferId != -1)
+            if (IndexBufferId != -1)
                 return;
 
             // Prevent the vertex buffer from becoming too large (maxes at 8mb * grow factor)
-            if (minRenderableVertexCount * vertexDeclaration.VertexSize > 8 * 1024 * 1024)
+            if (MinRenderableVertexCount * VertexDeclaration.VertexSize > 8 * 1024 * 1024)
                 return;
 
-            minRenderableVertexCount = (int)(minRenderableVertexCount * 1.75);
+            MinRenderableVertexCount = (int)(MinRenderableVertexCount * 1.75);
 
             if (commandSync.WaitForAll())
                 BufferWaitCount++;
@@ -115,23 +115,23 @@ namespace BrewLib.Graphics.Renderers.PrimitiveStreamers
 
             // Rebuild the VBO
 
-            GL.BindBuffer(BufferTarget.ArrayBuffer, vertexBufferId);
+            GL.BindBuffer(BufferTarget.ArrayBuffer, VertexBufferId);
             GL.UnmapBuffer(BufferTarget.ArrayBuffer);
             GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
-            GL.DeleteBuffer(vertexBufferId);
+            GL.DeleteBuffer(VertexBufferId);
 
             initializeVertexBuffer();
 
             // Rebuild the VAO
 
             GL.BindVertexArray(0);
-            GL.DeleteVertexArray(vertexArrayId);
+            GL.DeleteVertexArray(VertexArrayId);
 
-            var previousShader = currentShader;
-            currentShader = null;
+            var previousShader = CurrentShader;
+            CurrentShader = null;
             Bind(previousShader);
 
-            Debug.WriteLine("Expanded the vertex buffer to " + minRenderableVertexCount + " vertices (" + (vertexBufferSize / 1024) + "kb)");
+            Debug.WriteLine("Expanded the vertex buffer to " + MinRenderableVertexCount + " vertices (" + (vertexBufferSize / 1024) + "kb)");
 
             bufferOffset = 0;
             drawOffset = 0;

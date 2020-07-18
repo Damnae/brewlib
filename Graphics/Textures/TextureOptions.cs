@@ -1,10 +1,12 @@
-﻿using BrewLib.Data;
+﻿using Brewlib.Util;
+using BrewLib.Data;
 using BrewLib.Util;
 using Newtonsoft.Json.Linq;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 
 namespace BrewLib.Graphics.Textures
@@ -15,6 +17,7 @@ namespace BrewLib.Graphics.Textures
 
         // Settings
         public bool Srgb = true;
+        public bool PreMultiply = false;
         public bool GenerateMipmaps = false;
 
         // Parameters
@@ -34,6 +37,16 @@ namespace BrewLib.Graphics.Textures
             GL.TexParameter(target, TextureParameterName.TextureWrapS, (int)TextureWrapS);
             GL.TexParameter(target, TextureParameterName.TextureWrapT, (int)TextureWrapT);
             DrawState.CheckError("applying texture parameters");
+        }
+
+        public void WithBitmap(Bitmap bitmap, Action<Bitmap> action)
+        {
+            if (PreMultiply)
+            {
+                using (var pinned = BitmapHelper.Premultiply(bitmap))
+                    action(pinned.Bitmap);
+            }
+            else action(bitmap);
         }
 
         public bool Equals(TextureOptions other)

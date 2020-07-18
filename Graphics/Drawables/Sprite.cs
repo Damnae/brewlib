@@ -23,7 +23,7 @@ namespace BrewLib.Graphics.Drawables
         {
             if (Texture == null) return;
 
-            var renderer = DrawState.Prepare(drawContext.Get<SpriteRenderer>(), camera, RenderStates);
+            var renderer = DrawState.Prepare(drawContext.Get<QuadRenderer>(), camera, RenderStates);
             var color = Color.WithOpacity(opacity);
 
             var textureX0 = 0.0f;

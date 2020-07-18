@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace BrewLib.Graphics
@@ -12,10 +13,13 @@ namespace BrewLib.Graphics
 
     public class RenderStates
     {
+        public static readonly RenderStates Default = new RenderStates();
+
         public BlendingFactorState BlendingFactor = BlendingFactorState.Default;
         public BlendingEquationState BlendingEquation = BlendingEquationState.Default;
         public CullFaceState CullFace = CullFaceState.Default2d;
         public DepthState Depth = DepthState.Default2d;
+        public PointSpriteState PointSprite = PointSpriteState.Default;
 
         private static List<FieldInfo> fields = new List<FieldInfo>(typeof(RenderStates).GetFields());
         private static Dictionary<Type, RenderState> currentStates = new Dictionary<Type, RenderState>();
@@ -23,7 +27,7 @@ namespace BrewLib.Graphics
         public void Apply()
         {
             var flushed = false;
-            foreach (var field in fields)
+            foreach (var field in fields.Where(f => !f.IsStatic))
             {
                 var newState = (RenderState)field.GetValue(this);
 
@@ -85,6 +89,7 @@ namespace BrewLib.Graphics
                     alphaSrc = BlendingFactorSrc.One;
                     alphaDest = BlendingFactorDest.OneMinusSrcAlpha;
                     break;
+                case BlendingMode.BlendAdd:
                 case BlendingMode.Premultiplied:
                     src = alphaSrc = BlendingFactorSrc.One;
                     dest = alphaDest = BlendingFactorDest.OneMinusSrcAlpha;
@@ -199,5 +204,30 @@ namespace BrewLib.Graphics
             => mode == other.mode;
 
         public override string ToString() => $"CullFace mode:{mode}";
+    }
+
+    public class PointSpriteState : RenderState, IEquatable<PointSpriteState>
+    {
+        private bool enabled;
+        private bool sizeEnabled;
+
+        public static readonly PointSpriteState Default = new PointSpriteState(false, false);
+
+        public PointSpriteState(bool enabled, bool sizeEnabled)
+        {
+            this.enabled = enabled;
+            this.sizeEnabled = sizeEnabled;
+        }
+
+        public void Apply()
+        {
+            DrawState.SetCapability(EnableCap.PointSprite, enabled);
+            DrawState.SetCapability(EnableCap.ProgramPointSize, sizeEnabled);
+        }
+
+        public bool Equals(PointSpriteState other)
+            => enabled == other.enabled;
+
+        public override string ToString() => $"PointSize mode:{enabled}, size:{sizeEnabled}";
     }
 }

@@ -125,8 +125,12 @@ namespace BrewLib.Graphics.Drawables
             var inverseScaling = 1 / scaling;
             var color = Color.WithOpacity(opacity);
 
-            var renderer = DrawState.Prepare(drawContext.Get<SpriteRenderer>(), camera, RenderStates);
-            var clipRegion = DrawState.GetClipRegion(camera) ?? new Box2(camera.ExtendedViewport.Left, camera.ExtendedViewport.Top, camera.ExtendedViewport.Right, camera.ExtendedViewport.Bottom);
+            var renderer = DrawState.Prepare(drawContext.Get<QuadRenderer>(), camera, RenderStates);
+
+            var clipRegion = DrawState.GetClipRegion(camera) ?? 
+                Box2.FromDimensions(
+                    new Vector2(camera.ExtendedViewport.Left, camera.ExtendedViewport.Top) + camera.Position.Xy, 
+                    new Vector2(camera.ExtendedViewport.Width, camera.ExtendedViewport.Height));
 
             foreach (var layoutGlyph in textLayout.VisibleGlyphs)
             {

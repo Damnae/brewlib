@@ -30,7 +30,7 @@ namespace BrewLib.Graphics.Textures
             this.textureId = textureId;
         }
 
-        public void Update(Bitmap bitmap, int x, int y)
+        public override void Update(Bitmap bitmap, int x, int y, TextureOptions textureOptions)
         {
             if (bitmap.Width < 1 || bitmap.Height < 1)
                 throw new InvalidOperationException($"Invalid bitmap size: {bitmap.Width}x{bitmap.Height}");
@@ -40,10 +40,14 @@ namespace BrewLib.Graphics.Textures
 
             DrawState.BindPrimaryTexture(textureId, TexturingModes.Texturing2d);
 
-            var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, bitmapData.Width, bitmapData.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
-            GL.Finish();
-            bitmap.UnlockBits(bitmapData);
+            textureOptions = textureOptions ?? TextureOptions.Default;
+            textureOptions.WithBitmap(bitmap, b =>
+            {
+                var bitmapData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, bitmapData.Width, bitmapData.Height, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
+                GL.Finish();
+                b.UnlockBits(bitmapData);
+            });
 
             DrawState.CheckError("updating texture");
         }
@@ -112,13 +116,17 @@ namespace BrewLib.Graphics.Textures
 
             textureOptions = textureOptions ?? TextureOptions.Default;
 
+            if (textureOptions.PreMultiply)
+                color = color.Premultiply();
+
+            var rgba = color.ToRgba();
+            var data = new int[width * height];
+            for (int i = 0; i < width * height; i++)
+                data[i] = rgba;
+
             var textureId = GL.GenTexture();
             try
             {
-                var data = new int[width * height];
-                for (int i = 0; i < width * height; i++)
-                    data[i] = color.ToRgba();
-
                 DrawState.BindTexture(textureId);
                 GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Rgba, PixelType.UnsignedByte, data);
                 if (textureOptions.GenerateMipmaps)
@@ -152,13 +160,16 @@ namespace BrewLib.Graphics.Textures
             {
                 DrawState.BindTexture(textureId);
 
-                var bitmapData = bitmap.LockBits(new Rectangle(0, 0, bitmap.Width, bitmap.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                textureOptions.WithBitmap(bitmap, b =>
+                {
+                    var bitmapData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    GL.TexImage2D(TextureTarget.Texture2D, 0, sRgb ? PixelInternalFormat.SrgbAlpha : PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
+                    if (textureOptions.GenerateMipmaps)
+                        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+                    GL.Finish();
+                    b.UnlockBits(bitmapData);
+                });
 
-                GL.TexImage2D(TextureTarget.Texture2D, 0, sRgb ? PixelInternalFormat.SrgbAlpha : PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
-                if (textureOptions.GenerateMipmaps)
-                    GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-                GL.Finish();
-                bitmap.UnlockBits(bitmapData);
                 DrawState.CheckError("specifying texture");
 
                 textureOptions.ApplyParameters(TextureTarget.Texture2D);

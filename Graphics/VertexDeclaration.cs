@@ -1,6 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BrewLib.Graphics
 {
@@ -28,21 +29,10 @@ namespace BrewLib.Graphics
         }
 
         public VertexAttribute GetAttribute(AttributeUsage usage)
-        {
-            foreach (var attribute in vertexAttributes)
-                if (attribute.Usage == usage)
-                    return attribute;
-            return null;
-        }
+            => vertexAttributes.FirstOrDefault(a => a.Usage == usage);
 
-        public List<VertexAttribute> GetAttributes(AttributeUsage usage)
-        {
-            var attributes = new List<VertexAttribute>();
-            foreach (var attribute in vertexAttributes)
-                if (attribute.Usage == usage)
-                    attributes.Add(attribute);
-            return attributes;
-        }
+        public IEnumerable<VertexAttribute> GetAttributes(AttributeUsage usage)
+            => vertexAttributes.Where(a => a.Usage == usage);
 
         public void ActivateAttributes(Shader shader)
         {
@@ -71,8 +61,7 @@ namespace BrewLib.Graphics
         {
             if (other == this) return true;
 
-            var otherDeclaration = other as VertexDeclaration;
-            if (otherDeclaration == null) return false;
+            if (!(other is VertexDeclaration otherDeclaration)) return false;
             if (AttributeCount != otherDeclaration.AttributeCount) return false;
             for (var i = 0; i < AttributeCount; i++)
                 if (!this[i].Equals(otherDeclaration[i]))

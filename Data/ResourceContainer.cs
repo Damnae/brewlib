@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BrewLib.Util;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -11,6 +12,8 @@ namespace BrewLib.Data
         Stream GetStream(string filename, ResourceSource sources = ResourceSource.Embedded);
         byte[] GetBytes(string filename, ResourceSource sources = ResourceSource.Embedded);
         string GetString(string filename, ResourceSource sources = ResourceSource.Embedded);
+
+        SafeWriteStream GetWriteStream(string filename);
     }
 
     [Flags]
@@ -21,6 +24,7 @@ namespace BrewLib.Data
         Absolute = 4,
 
         None = 0,
+        Local = Embedded | Relative,
         Any = Embedded | Relative | Absolute,
     }
 }

@@ -112,6 +112,7 @@ namespace BrewLib.Graphics.Cameras
         public Vector3 FromScreen(Vector2 screenCoords)
         {
             Validate();
+            // TODO Vector3.Unproject() ?
 
             var deviceX = 2 * (screenCoords.X / viewport.Width) - 1;
             var deviceY = -2 * (screenCoords.Y / viewport.Height) + 1;
@@ -132,8 +133,11 @@ namespace BrewLib.Graphics.Cameras
         public Vector3 ToScreen(Vector3 worldCoords)
         {
             Validate();
+            // TODO Vector3.Project() ?
 
-            var devicePosition = Vector4.Transform(new Vector4(worldCoords, 1), projectionView);
+            var transformedPosition = Vector4.Transform(new Vector4(worldCoords, 1), projectionView);
+            var devicePosition = transformedPosition.Xyz / Math.Abs(transformedPosition.W);
+
             return new Vector3(
                 (devicePosition.X + 1) * 0.5f * viewport.Width,
                 (-devicePosition.Y + 1) * 0.5f * viewport.Height,

@@ -1,4 +1,5 @@
 ﻿using ManagedBass;
+using OpenTK;
 using System;
 
 namespace BrewLib.Audio
@@ -6,6 +7,12 @@ namespace BrewLib.Audio
     public class AudioChannel : IDisposable
     {
         public readonly AudioManager Manager;
+
+        private float frequency;
+        /// <summary>
+        /// Samples per second
+        /// </summary>
+        public float Frequency => frequency;
 
         private int channel;
         protected int Channel
@@ -17,7 +24,10 @@ namespace BrewLib.Audio
                 channel = value;
 
                 if (channel == 0) return;
-                duration = Bass.ChannelBytes2Seconds(channel, Bass.ChannelGetLength(channel));
+
+                Bass.ChannelGetAttribute(channel, ChannelAttribute.Frequency, out frequency);
+                Duration = Bass.ChannelBytes2Seconds(channel, Bass.ChannelGetLength(channel));
+
                 UpdateVolume();
                 updateTimeFactor();
             }
@@ -38,9 +48,7 @@ namespace BrewLib.Audio
                 Bass.ChannelSetPosition(channel, position);
             }
         }
-
-        private double duration;
-        public double Duration => duration;
+        public double Duration { get; private set; }
 
         private bool played;
         public bool Playing
@@ -60,6 +68,19 @@ namespace BrewLib.Audio
                     played = true;
                 }
                 else Bass.ChannelPause(channel);
+            }
+        }
+
+        private bool loop;
+        public bool Loop
+        {
+            get => loop;
+            set
+            {
+                if (loop == value) return;
+                loop = value;
+                if (channel == 0) return;
+                Bass.ChannelFlags(channel, loop ? BassFlags.Loop : 0, BassFlags.Loop);
             }
         }
 
@@ -95,20 +116,76 @@ namespace BrewLib.Audio
             }
         }
 
-        private bool temporary;
-        public bool Temporary => temporary;
+        private float pitch = 1;
+        public float Pitch
+        {
+            get
+            {
+                return pitch;
+            }
+            set
+            {
+                if (pitch == value) return;
+                pitch = value;
+                updatePitch();
+            }
+        }
+            
+        private float pan = 0;
+        public float Pan
+        {
+            get
+            {
+                return pan;
+            }
+            set
+            {
+                value = MathHelper.Clamp(value, -1, 1);
+                if (pan == value) return;
+
+                pan = value;
+                updatePan();
+            }
+        }
+
+        public int AvailableData
+        {
+            get
+            {
+                if (channel == 0) return 0;
+                return Bass.ChannelGetData(channel, IntPtr.Zero, (int)DataFlags.Available);
+            }
+        }
+
+        public bool Temporary { get; }
 
         internal AudioChannel(AudioManager audioManager, int channel = 0, bool temporary = false)
         {
             Manager = audioManager;
             Channel = channel;
-            this.temporary = temporary;
+            Temporary = temporary;
+        }
+
+        public float[] GetFft(bool complex = false)
+        {
+            var length = 2048;
+            var flags = DataFlags.FFT4096;
+
+            if (complex)
+            {
+                flags |= DataFlags.FFTComplex;
+                length *= 4;
+            }
+
+            var data = new float[length];
+            Bass.ChannelGetData(channel, data, (int)flags);
+            return data;
         }
 
         public void UpdateVolume()
         {
             if (channel == 0) return;
-            Bass.ChannelSetAttribute(channel, ChannelAttribute.Volume, volume * Manager.Volume);
+            Bass.ChannelSetAttribute(channel, ChannelAttribute.Volume, SoundUtil.FromLinearVolume(volume * Manager.Volume));
         }
 
         private void updateTimeFactor()
@@ -117,10 +194,21 @@ namespace BrewLib.Audio
             Bass.ChannelSetAttribute(channel, ChannelAttribute.Tempo, (int)((timeFactor - 1) * 100));
         }
 
+        private void updatePitch()
+        {
+            if (channel == 0 || frequency <= 0) return;
+            Bass.ChannelSetAttribute(channel, ChannelAttribute.Frequency, MathHelper.Clamp(frequency * pitch, 100, 100000));
+        }
+
+        private void updatePan()
+        {
+            if (channel == 0) return;
+            Bass.ChannelSetAttribute(channel, ChannelAttribute.Pan, pan);
+        }
+
         #region IDisposable Support
 
         private bool disposedValue = false;
-
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)

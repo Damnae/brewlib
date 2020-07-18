@@ -13,7 +13,6 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Management;
-using System.Resources;
 using System.Runtime.InteropServices;
 
 namespace BrewLib.Graphics
@@ -22,12 +21,8 @@ namespace BrewLib.Graphics
     {
         public const bool UseSrgb = false;
 
-        private static int maxDrawBuffers;
-        public static int MaxDrawBuffers => maxDrawBuffers;
-
-        private static bool colorCorrected;
-        public static bool ColorCorrected => colorCorrected;
-
+        public static int MaxDrawBuffers { get; private set; }
+        public static bool ColorCorrected { get; private set; }
         public static int TextureBinds { get; private set; }
 
         public static void Initialize(ResourceContainer resourceContainer, int width, int height)
@@ -44,7 +39,7 @@ namespace BrewLib.Graphics
                 if (defaultFramebufferColorEncoding == (int)0x8C40)
                 {
                     SetCapability(EnableCap.FramebufferSrgb, true);
-                    colorCorrected = true;
+                    ColorCorrected = true;
                 }
                 else Trace.WriteLine("Warning: The default framebuffer isn't sRgb");
             }
@@ -58,7 +53,7 @@ namespace BrewLib.Graphics
             maxTextureCoords = GL.GetInteger(GetPName.MaxTextureCoords);
 
             // glDrawBuffers requires opengl 2.0
-            maxDrawBuffers = HasCapabilities(2, 0) ? GL.GetInteger(GetPName.MaxDrawBuffers) : 1;
+            MaxDrawBuffers = HasCapabilities(2, 0) ? GL.GetInteger(GetPName.MaxDrawBuffers) : 1;
 
             Trace.WriteLine($"texture units available: fp:{maxFpTextureUnits} ps:{maxTextureImageUnits} vs:{maxVertexTextureImageUnits} gs:{maxGeometryTextureImageUnits} combined:{maxCombinedTextureImageUnits} coords:{maxTextureCoords}");
 
@@ -562,6 +557,7 @@ namespace BrewLib.Graphics
         Alphablend,
         Color,
         Additive,
+        BlendAdd,
         Premultiply,
         Premultiplied,
     }

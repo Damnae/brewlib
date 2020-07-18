@@ -56,6 +56,9 @@ namespace BrewLib.Util
             return IntPtr.Zero;
         }
 
+        [DllImport("msvcrt.dll", EntryPoint = "memset", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        public static extern IntPtr MemSet(IntPtr dest, int value, int count);
+
         [DllImport("msvcrt.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern int memcmp(byte[] b1, byte[] b2, long count);
 

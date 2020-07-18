@@ -17,8 +17,11 @@ namespace BrewLib.Graphics.Shaders
         public ShaderSnippet VertexShader;
         public ShaderSnippet FragmentShader;
         public readonly ShaderVariable GlPosition;
+        public readonly ShaderVariable GlPointSize;
+        public readonly ShaderVariable GlPointCoord;
         public readonly ShaderVariable GlFragColor;
         public readonly ShaderVariable GlFragDepth;
+        public int MinVersion = 110;
 
         public ShaderType AddStruct()
             => ProgramScope.AddStruct();
@@ -51,6 +54,8 @@ namespace BrewLib.Graphics.Shaders
         {
             VertexDeclaration = vertexDeclaration;
             GlPosition = new ShaderVariable(Context, "gl_Position", "vec4");
+            GlPointSize = new ShaderVariable(Context, "gl_PointSize", "float");
+            GlPointCoord = new ShaderVariable(Context, "gl_PointCoord", "vec2");
             GlFragColor = new ShaderVariable(Context, "gl_FragColor", "vec4");
             GlFragDepth = new ShaderVariable(Context, "gl_FragDepth", "float");
         }
@@ -58,7 +63,7 @@ namespace BrewLib.Graphics.Shaders
         public Shader Build(bool log = false)
         {
             Context.VertexDeclaration = VertexDeclaration;
-            Context.MarkUsedVariables(() => FragmentShader.Generate(Context), GlFragColor, GlFragDepth);
+            Context.MarkUsedVariables(() => FragmentShader.Generate(Context), GlPointSize, GlFragColor, GlFragDepth);
 
             var commonCode = buildCommon();
             var vertexShaderCode = buildVertexShader();
@@ -80,7 +85,7 @@ namespace BrewLib.Graphics.Shaders
         {
             var code = new StringBuilder();
 
-            code.AppendLine($"#version {Math.Max(VertexShader.MinVersion, FragmentShader.MinVersion)}");
+            code.AppendLine($"#version {Math.Max(MinVersion, Math.Max(VertexShader.MinVersion, FragmentShader.MinVersion))}");
 
             var requiredExtensions = new HashSet<string>();
             foreach (var extensionName in VertexShader.RequiredExtensions)

@@ -20,6 +20,8 @@ namespace BrewLib.Graphics.Textures
         public IEnumerable<string> ResourceNames
             => textures.Where(e => e.Value != null).Select(e => e.Key);
 
+        public event ResourceLoadedDelegate<Texture2dRegion> ResourceLoaded;
+
         public TextureContainerAtlas(ResourceContainer resourceContainer = null, TextureOptions textureOptions = null, int width = 512, int height = 512, int padding = 0, string description = nameof(TextureContainerAtlas))
         {
             this.resourceContainer = resourceContainer;
@@ -44,6 +46,7 @@ namespace BrewLib.Graphics.Textures
                         texture = atlas.AddRegion(bitmap, filename);
 
                 textures.Add(filename, texture);
+                ResourceLoaded?.Invoke(filename, texture);
             }
             return texture;
         }
