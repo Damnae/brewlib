@@ -309,14 +309,14 @@ namespace BrewLib.UserInterface
                 dragTargets[e.Button] = null;
 
             var target = dragTarget ?? hoveredWidget ?? root;
-            return fire((w, evt) => w.NotifyClickUp(evt, e), target).Handled;
+            return fire((w, evt) => w.NotifyClickUp(evt, e), target, relatedTarget: hoveredWidget).Handled;
         }
         public void OnMouseMove(MouseMoveEventArgs e)
         {
             RefreshHover();
             foreach (var dragTarget in dragTargets.Values)
                 if (dragTarget != null)
-                    fire((w, evt) => w.NotifyDrag(evt, e), dragTarget);
+                    fire((w, evt) => w.NotifyDrag(evt, e), dragTarget, relatedTarget: hoveredWidget);
         }
         public bool OnMouseWheel(MouseWheelEventArgs e) => fire((w, evt) => w.NotifyMouseWheel(evt, e), hoveredWidget ?? root).Handled;
         public bool OnKeyDown(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyDown(evt, e), keyboardFocus ?? hoveredWidget ?? root).Handled;
