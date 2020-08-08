@@ -25,6 +25,9 @@ namespace BrewLib.UserInterface
         private readonly Dictionary<MouseButton, Widget> clickTargets = new Dictionary<MouseButton, Widget>();
         private readonly Dictionary<GamepadButton, Widget> gamepadButtonTargets = new Dictionary<GamepadButton, Widget>();
 
+        private Widget hoveredDraggableWidget;
+        private readonly Dictionary<MouseButton, object> dragData = new Dictionary<MouseButton, object>();
+
         public Vector2 Size
         {
             get { return rootContainer.Size; }
@@ -97,6 +100,10 @@ namespace BrewLib.UserInterface
             {
                 mousePosition = camera.FromScreen(InputManager.MousePosition).Xy;
                 changeHoveredWidget(rootContainer.GetWidgetAt(mousePosition.X, mousePosition.Y));
+
+                hoveredDraggableWidget = HoveredWidget;
+                while (hoveredDraggableWidget != null && hoveredDraggableWidget.GetDragData == null)
+                    hoveredDraggableWidget = hoveredDraggableWidget.Parent;
             }
             else changeHoveredWidget(null);
         }
@@ -302,6 +309,22 @@ namespace BrewLib.UserInterface
         }
         public bool OnClickUp(MouseButtonEventArgs e)
         {
+            // End Drag and Drop
+            if (dragData.TryGetValue(e.Button, out var data) && data != null)
+            {
+                dragData[e.Button] = null;
+
+                var dropTarget = HoveredWidget ?? rootContainer;
+                while (dropTarget != null)
+                {
+                    if (dropTarget.HandleDrop != null && dropTarget.HandleDrop(data))
+                        break;
+
+                    dropTarget = dropTarget.Parent;
+                }
+            }
+
+            // This must be after Drop handling, because it may cause the click target to become disposed.
             if (clickTargets.TryGetValue(e.Button, out Widget clickTarget))
                 clickTargets[e.Button] = null;
 
@@ -311,9 +334,19 @@ namespace BrewLib.UserInterface
         public void OnMouseMove(MouseMoveEventArgs e)
         {
             RefreshHover();
-            foreach (var clickTarget in clickTargets.Values)
-                if (clickTarget != null)
-                    fire((w, evt) => w.NotifyClickMove(evt, e), clickTarget, relatedTarget: HoveredWidget);
+            foreach (var entry in clickTargets)
+            {
+                var clickTarget = entry.Value;
+                if (clickTarget == null)
+                    continue;
+
+                // Start drag and drop
+                var button = entry.Key;
+                if (!dragData.TryGetValue(button, out var data) || data == null)
+                    dragData[button] = hoveredDraggableWidget?.GetDragData();
+
+                fire((w, evt) => w.NotifyClickMove(evt, e), clickTarget, relatedTarget: HoveredWidget);
+            }
         }
         public bool OnMouseWheel(MouseWheelEventArgs e) => fire((w, evt) => w.NotifyMouseWheel(evt, e), HoveredWidget ?? rootContainer).Handled;
         public bool OnKeyDown(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyDown(evt, e), keyboardFocus ?? HoveredWidget ?? rootContainer).Handled;

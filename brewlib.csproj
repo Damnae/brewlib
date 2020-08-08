@@ -149,7 +149,6 @@
     <Compile Include="Time\TimeSource.cs" />
     <Compile Include="UserInterface\Button.cs" />
     <Compile Include="UserInterface\ClickBehavior.cs" />
-    <Compile Include="UserInterface\DragDropBehavior.cs" />
     <Compile Include="UserInterface\DrawableContainer.cs" />
     <Compile Include="UserInterface\Field.cs" />
     <Compile Include="UserInterface\FlowLayout.cs" />

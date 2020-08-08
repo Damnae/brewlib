@@ -8,6 +8,7 @@ using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Security.Policy;
 using System.Text;
 
 namespace BrewLib.UserInterface
@@ -609,6 +610,23 @@ namespace BrewLib.UserInterface
             => EventHelper.InvokeStrict(() => handler, d => ((WidgetEventHandler<T>)d)(evt, e));
 
         public event EventHandler OnDisposed;
+
+        #endregion
+
+        #region Drag and Drop
+
+        /// <summary>
+        /// Set a function to enable dragging this widget.
+        /// </summary>
+        public GetDragDataDelegate GetDragData;
+        public delegate object GetDragDataDelegate();
+        
+        /// <summary>
+        /// Set a function to enable dropping onto this widget.
+        /// Return true if the drop was valid.
+        /// </summary>
+        public HandleDropDelegate HandleDrop;
+        public delegate bool HandleDropDelegate(object data);
 
         #endregion
 
