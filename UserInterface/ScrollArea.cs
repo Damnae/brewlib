@@ -110,7 +110,7 @@ namespace BrewLib.UserInterface
                 if (e.Button != MouseButton.Left) return;
                 dragged = false;
             };
-            OnDrag += (sender, e) =>
+            OnClickMove += (sender, e) =>
             {
                 if (!dragged) return;
                 scroll(e.XDelta, e.YDelta);

@@ -82,14 +82,14 @@ namespace BrewLib.UserInterface
 
             public void Bind()
             {
-                Widget.OnDrag += widget_OnDrag;
+                Widget.OnClickMove += widget_OnClickMove;
                 Widget.OnClickDown += widget_OnClickDown;
                 Widget.OnClickUp += widget_OnClickUp;
             }
 
             public void Unbind()
             {
-                Widget.OnDrag -= widget_OnDrag;
+                Widget.OnClickMove -= widget_OnClickMove;
                 Widget.OnClickDown -= widget_OnClickDown;
                 Widget.OnClickUp -= widget_OnClickUp;
             }
@@ -101,7 +101,7 @@ namespace BrewLib.UserInterface
                 return true;
             }
 
-            private void widget_OnDrag(WidgetEvent evt, MouseMoveEventArgs e)
+            private void widget_OnClickMove(WidgetEvent evt, MouseMoveEventArgs e)
             {
                 if (!dragged) return;
 

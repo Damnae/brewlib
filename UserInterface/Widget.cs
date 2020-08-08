@@ -531,10 +531,10 @@ namespace BrewLib.UserInterface
             return false;
         }
 
-        public event WidgetEventHandler<MouseMoveEventArgs> OnDrag;
-        public bool NotifyDrag(WidgetEvent evt, MouseMoveEventArgs e)
+        public event WidgetEventHandler<MouseMoveEventArgs> OnClickMove;
+        public bool NotifyClickMove(WidgetEvent evt, MouseMoveEventArgs e)
         {
-            Raise(OnDrag, evt, e);
+            Raise(OnClickMove, evt, e);
             return false;
         }
 

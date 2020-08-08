@@ -53,7 +53,7 @@ namespace BrewLib.UserInterface
                 DragEnd(dragButton);
                 OnValueCommited?.Invoke(this, e);
             };
-            OnDrag += (sender, e) =>
+            OnClickMove += (sender, e) =>
             {
                 if (disabled || !dragged) return;
                 Value = GetValueForPosition(new Vector2(e.X, e.Y));

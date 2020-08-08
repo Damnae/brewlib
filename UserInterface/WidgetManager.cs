@@ -14,32 +14,29 @@ namespace BrewLib.UserInterface
 {
     public class WidgetManager : InputHandler, IDisposable
     {
-        private InputManager inputManager;
-        public InputManager InputManager => inputManager;
+        public InputManager InputManager { get; }
+        public ScreenLayerManager ScreenLayerManager { get; }
+        public readonly Skin Skin;
 
-        private ScreenLayerManager screenLayerManager;
-        public ScreenLayerManager ScreenLayerManager => screenLayerManager;
+        public Widget Root { get; }
 
-        private Widget root;
+        private Widget rootContainer;
+        private readonly Widget tooltipOverlay;
+        private readonly Dictionary<MouseButton, Widget> clickTargets = new Dictionary<MouseButton, Widget>();
+        private readonly Dictionary<GamepadButton, Widget> gamepadButtonTargets = new Dictionary<GamepadButton, Widget>();
+
         public Vector2 Size
         {
-            get { return root.Size; }
-            set { root.Size = value; }
+            get { return rootContainer.Size; }
+            set { rootContainer.Size = value; }
         }
         public float Opacity
         {
-            get { return root.Opacity; }
-            set { root.Opacity = value; }
+            get { return rootContainer.Opacity; }
+            set { rootContainer.Opacity = value; }
         }
-        private Widget publicRoot;
-        public Widget Root => publicRoot;
-        private Widget tooltipOverlay;
 
-        private Dictionary<MouseButton, Widget> dragTargets = new Dictionary<MouseButton, Widget>();
-        private Dictionary<GamepadButton, Widget> gamepadButtonTargets = new Dictionary<GamepadButton, Widget>();
-
-        private Widget hoveredWidget;
-        public Widget HoveredWidget => hoveredWidget;
+        public Widget HoveredWidget { get; private set; }
 
         private Widget keyboardFocus;
         public Widget KeyboardFocus
@@ -83,42 +80,40 @@ namespace BrewLib.UserInterface
             }
         }
 
-        public readonly Skin Skin;
-
         public WidgetManager(ScreenLayerManager screenLayerManager, InputManager inputManager, Skin skin)
         {
-            this.screenLayerManager = screenLayerManager;
-            this.inputManager = inputManager;
+            ScreenLayerManager = screenLayerManager;
+            InputManager = inputManager;
             Skin = skin;
 
-            root = new StackLayout(this) { FitChildren = true, };
-            root.Add(publicRoot = new StackLayout(this) { FitChildren = true, });
-            root.Add(tooltipOverlay = new Widget(this) { Hoverable = false, });
+            rootContainer = new StackLayout(this) { FitChildren = true, };
+            rootContainer.Add(Root = new StackLayout(this) { FitChildren = true, });
+            rootContainer.Add(tooltipOverlay = new Widget(this) { Hoverable = false, });
         }
 
         public void RefreshHover()
         {
-            if (camera != null && inputManager.HasMouseFocus)
+            if (camera != null && InputManager.HasMouseFocus)
             {
-                mousePosition = camera.FromScreen(inputManager.MousePosition).Xy;
-                changeHoveredWidget(root.GetWidgetAt(mousePosition.X, mousePosition.Y));
+                mousePosition = camera.FromScreen(InputManager.MousePosition).Xy;
+                changeHoveredWidget(rootContainer.GetWidgetAt(mousePosition.X, mousePosition.Y));
             }
             else changeHoveredWidget(null);
         }
 
         public void NotifyWidgetDisposed(Widget widget)
         {
-            if (hoveredWidget == widget)
+            if (HoveredWidget == widget)
                 RefreshHover();
             if (keyboardFocus == widget)
                 keyboardFocus = null;
 
             DisableGamepadEvents(widget);
 
-            var dragKeys = new List<MouseButton>(dragTargets.Keys);
-            foreach (var key in dragKeys)
-                if (dragTargets[key] == widget)
-                    dragTargets[key] = null;
+            var clickKeys = new List<MouseButton>(clickTargets.Keys);
+            foreach (var key in clickKeys)
+                if (clickTargets[key] == widget)
+                    clickTargets[key] = null;
 
             var gamepadKeys = new List<GamepadButton>(gamepadButtonTargets.Keys);
             foreach (var key in gamepadKeys)
@@ -128,13 +123,15 @@ namespace BrewLib.UserInterface
 
         public void Draw(DrawContext drawContext)
         {
-            if (root.Visible)
-                root.Draw(drawContext, 1);
+            if (rootContainer.Visible)
+                rootContainer.Draw(drawContext, 1);
         }
+
+        private void camera_Changed(object sender, EventArgs e) => InvalidateAnchors();
 
         #region Tooltip
 
-        private Dictionary<Widget, Widget> tooltips = new Dictionary<Widget, Widget>();
+        private readonly Dictionary<Widget, Widget> tooltips = new Dictionary<Widget, Widget>();
 
         public void RegisterTooltip(Widget widget, string text)
         {
@@ -159,7 +156,7 @@ namespace BrewLib.UserInterface
             tooltipOverlay.Add(tooltip);
             widget.OnHovered += TooltipWidget_OnHovered;
 
-            if (widget == hoveredWidget)
+            if (widget == HoveredWidget)
                 displayTooltip(tooltip);
         }
 
@@ -182,7 +179,7 @@ namespace BrewLib.UserInterface
 
         private void displayTooltip(Widget tooltip)
         {
-            var rootBounds = root.Bounds;
+            var rootBounds = rootContainer.Bounds;
 
             // Attempt to show the tooltip on top of its target
 
@@ -245,7 +242,7 @@ namespace BrewLib.UserInterface
                 refreshingAnchors = true;
                 var iterationBefore = anchoringIteration;
 
-                root.PreLayout();
+                rootContainer.PreLayout();
                 while (needsAnchorUpdate)
                 {
                     needsAnchorUpdate = false;
@@ -254,7 +251,7 @@ namespace BrewLib.UserInterface
                         Debug.Print("Could not resolve ui layout");
                         break;
                     }
-                    root.UpdateAnchoring(++anchoringIteration);
+                    rootContainer.UpdateAnchoring(++anchoringIteration);
                 }
                 RefreshHover();
             }
@@ -282,7 +279,7 @@ namespace BrewLib.UserInterface
 
         #region Input events
 
-        private List<Widget> gamepadTargets = new List<Widget>();
+        private readonly List<Widget> gamepadTargets = new List<Widget>();
 
         public void EnableGamepadEvents(Widget widget)
             => gamepadTargets.Insert(0, widget);
@@ -293,53 +290,53 @@ namespace BrewLib.UserInterface
         public void OnFocusChanged(FocusChangedEventArgs e) => RefreshHover();
         public bool OnClickDown(MouseButtonEventArgs e)
         {
-            var target = hoveredWidget ?? root;
+            var target = HoveredWidget ?? rootContainer;
             if (keyboardFocus != null && target != keyboardFocus && !target.HasAncestor(keyboardFocus))
                 KeyboardFocus = null;
 
             var widgetEvent = fire((w, evt) => w.NotifyClickDown(evt, e), target);
             if (widgetEvent.Handled)
-                dragTargets[e.Button] = widgetEvent.Listener;
+                clickTargets[e.Button] = widgetEvent.Listener;
 
             return widgetEvent.Handled;
         }
         public bool OnClickUp(MouseButtonEventArgs e)
         {
-            if (dragTargets.TryGetValue(e.Button, out Widget dragTarget))
-                dragTargets[e.Button] = null;
+            if (clickTargets.TryGetValue(e.Button, out Widget clickTarget))
+                clickTargets[e.Button] = null;
 
-            var target = dragTarget ?? hoveredWidget ?? root;
-            return fire((w, evt) => w.NotifyClickUp(evt, e), target, relatedTarget: hoveredWidget).Handled;
+            var target = clickTarget ?? HoveredWidget ?? rootContainer;
+            return fire((w, evt) => w.NotifyClickUp(evt, e), target, relatedTarget: HoveredWidget).Handled;
         }
         public void OnMouseMove(MouseMoveEventArgs e)
         {
             RefreshHover();
-            foreach (var dragTarget in dragTargets.Values)
-                if (dragTarget != null)
-                    fire((w, evt) => w.NotifyDrag(evt, e), dragTarget, relatedTarget: hoveredWidget);
+            foreach (var clickTarget in clickTargets.Values)
+                if (clickTarget != null)
+                    fire((w, evt) => w.NotifyClickMove(evt, e), clickTarget, relatedTarget: HoveredWidget);
         }
-        public bool OnMouseWheel(MouseWheelEventArgs e) => fire((w, evt) => w.NotifyMouseWheel(evt, e), hoveredWidget ?? root).Handled;
-        public bool OnKeyDown(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyDown(evt, e), keyboardFocus ?? hoveredWidget ?? root).Handled;
-        public bool OnKeyUp(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyUp(evt, e), keyboardFocus ?? hoveredWidget ?? root).Handled;
-        public bool OnKeyPress(KeyPressEventArgs e) => fire((w, evt) => w.NotifyKeyPress(evt, e), keyboardFocus ?? hoveredWidget ?? root).Handled;
+        public bool OnMouseWheel(MouseWheelEventArgs e) => fire((w, evt) => w.NotifyMouseWheel(evt, e), HoveredWidget ?? rootContainer).Handled;
+        public bool OnKeyDown(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyDown(evt, e), keyboardFocus ?? HoveredWidget ?? rootContainer).Handled;
+        public bool OnKeyUp(KeyboardKeyEventArgs e) => fire((w, evt) => w.NotifyKeyUp(evt, e), keyboardFocus ?? HoveredWidget ?? rootContainer).Handled;
+        public bool OnKeyPress(KeyPressEventArgs e) => fire((w, evt) => w.NotifyKeyPress(evt, e), keyboardFocus ?? HoveredWidget ?? rootContainer).Handled;
 
         private void changeHoveredWidget(Widget widget)
         {
-            if (widget == hoveredWidget) return;
+            if (widget == HoveredWidget) return;
 
-            if (hoveredWidget != null)
+            if (HoveredWidget != null)
             {
                 var e = new WidgetHoveredEventArgs(false);
-                fire((w, evt) => w.NotifyHoveredWidgetChange(evt, e), hoveredWidget, widget);
+                fire((w, evt) => w.NotifyHoveredWidgetChange(evt, e), HoveredWidget, widget);
             }
 
-            var previousWidget = hoveredWidget;
-            hoveredWidget = widget;
+            var previousWidget = HoveredWidget;
+            HoveredWidget = widget;
 
-            if (hoveredWidget != null)
+            if (HoveredWidget != null)
             {
                 var e = new WidgetHoveredEventArgs(true);
-                fire((w, evt) => w.NotifyHoveredWidgetChange(evt, e), hoveredWidget, previousWidget);
+                fire((w, evt) => w.NotifyHoveredWidgetChange(evt, e), HoveredWidget, previousWidget);
             }
         }
 
@@ -398,8 +395,6 @@ namespace BrewLib.UserInterface
 
         #endregion
 
-        private void camera_Changed(object sender, EventArgs e) => InvalidateAnchors();
-
         #region IDisposable Support
 
         protected virtual void Dispose(bool disposing)
@@ -407,10 +402,10 @@ namespace BrewLib.UserInterface
             if (disposing)
             {
                 if (camera != null) camera.Changed -= camera_Changed;
-                root.Dispose();
+                rootContainer.Dispose();
             }
             camera = null;
-            root = null;
+            rootContainer = null;
         }
 
         public void Dispose()

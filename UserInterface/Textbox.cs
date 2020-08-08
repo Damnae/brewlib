@@ -271,7 +271,7 @@ namespace BrewLib.UserInterface
                 selectionStart = cursorPosition = content.GetCharacterIndexAt(Manager.Camera.FromScreen(new Vector2(e.X, e.Y)).Xy);
                 return true;
             };
-            OnDrag += (sender, e) =>
+            OnClickMove += (sender, e) =>
             {
                 cursorPosition = content.GetCharacterIndexAt(Manager.Camera.FromScreen(new Vector2(e.X, e.Y)).Xy);
             };
