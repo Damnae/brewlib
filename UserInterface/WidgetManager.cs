@@ -1,5 +1,6 @@
 ﻿using BrewLib.Graphics;
 using BrewLib.Graphics.Cameras;
+using BrewLib.Graphics.Drawables;
 using BrewLib.Input;
 using BrewLib.ScreenLayers;
 using BrewLib.UserInterface.Skinning;
@@ -9,6 +10,7 @@ using OpenTK.Input;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace BrewLib.UserInterface
 {
@@ -25,8 +27,13 @@ namespace BrewLib.UserInterface
         private readonly Dictionary<MouseButton, Widget> clickTargets = new Dictionary<MouseButton, Widget>();
         private readonly Dictionary<GamepadButton, Widget> gamepadButtonTargets = new Dictionary<GamepadButton, Widget>();
 
+        private readonly Drawable dragDrawable;
+        private Vector2 dragOffset;
+        private Vector2 dragSize;
         private Widget hoveredDraggableWidget;
         private readonly Dictionary<MouseButton, object> dragData = new Dictionary<MouseButton, object>();
+        public bool CanDrag => hoveredDraggableWidget != null;
+        public bool IsDragging => dragData.Values.Any(v => v != null);
 
         public Vector2 Size
         {
@@ -92,6 +99,8 @@ namespace BrewLib.UserInterface
             rootContainer = new StackLayout(this) { FitChildren = true, };
             rootContainer.Add(Root = new StackLayout(this) { FitChildren = true, });
             rootContainer.Add(tooltipOverlay = new Widget(this) { Hoverable = false, });
+
+            dragDrawable = skin.GetDrawable("dragCursor");
         }
 
         public void RefreshHover()
@@ -132,6 +141,9 @@ namespace BrewLib.UserInterface
         {
             if (rootContainer.Visible)
                 rootContainer.Draw(drawContext, 1);
+
+            if (IsDragging)
+                dragDrawable.Draw(drawContext, Camera, new Box2(mousePosition + dragOffset, mousePosition + dragOffset + dragSize));
         }
 
         private void camera_Changed(object sender, EventArgs e) => InvalidateAnchors();
@@ -342,8 +354,12 @@ namespace BrewLib.UserInterface
 
                 // Start drag and drop
                 var button = entry.Key;
-                if (!dragData.TryGetValue(button, out var data) || data == null)
-                    dragData[button] = hoveredDraggableWidget?.GetDragData();
+                if (hoveredDraggableWidget != null && (!dragData.TryGetValue(button, out var data) || data == null))
+                {
+                    dragOffset = hoveredDraggableWidget.AbsolutePosition - mousePosition;
+                    dragSize = hoveredDraggableWidget.Size;
+                    dragData[button] = hoveredDraggableWidget.GetDragData();
+                }
 
                 fire((w, evt) => w.NotifyClickMove(evt, e), clickTarget, relatedTarget: HoveredWidget);
             }
