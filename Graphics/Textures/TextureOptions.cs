@@ -71,7 +71,7 @@ namespace BrewLib.Graphics.Textures
             byte[] data;
             if (File.Exists(filename))
                 data = File.ReadAllBytes(filename);
-            else data = resourceContainer?.GetBytes(filename);
+            else data = resourceContainer?.GetBytes(filename, ResourceSource.Embedded);
 
             return data != null ? load(data.ToJObject()) : null;
         }

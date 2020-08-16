@@ -24,7 +24,7 @@ namespace BrewLib.Audio
             decodeStream = Bass.CreateStream(path, 0, 0, flags);
             if (decodeStream == 0)
             {
-                var resourceStream = resourceContainer.GetStream(path);
+                var resourceStream = resourceContainer.GetStream(path, ResourceSource.Embedded);
                 if (resourceStream != null)
                 {
                     var readBuffer = new byte[32768];

@@ -132,7 +132,7 @@ namespace BrewLib.Graphics.Text
 
             if (!fontFamilies.TryGetValue(name, out FontFamily fontFamily))
             {
-                var bytes = resourceContainer.GetBytes(name);
+                var bytes = resourceContainer.GetBytes(name, ResourceSource.Embedded);
                 if (bytes != null)
                 {
                     GCHandle pinnedArray = GCHandle.Alloc(bytes, GCHandleType.Pinned);

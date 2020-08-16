@@ -17,15 +17,15 @@ namespace BrewLib.Data
             this.path = path;
         }
 
-        public Stream GetStream(string filename, ResourceSource sources = ResourceSource.Embedded)
+        public Stream GetStream(string filename, ResourceSource sources)
             => resourceContainer.GetStream(applyPath(filename), sources) ??
             resourceContainer.GetStream(filename, sources);
 
-        public byte[] GetBytes(string filename, ResourceSource sources = ResourceSource.Embedded)
+        public byte[] GetBytes(string filename, ResourceSource sources)
             => resourceContainer.GetBytes(applyPath(filename), sources) ??
             resourceContainer.GetBytes(filename, sources);
 
-        public string GetString(string filename, ResourceSource sources = ResourceSource.Embedded)
+        public string GetString(string filename, ResourceSource sources)
             => resourceContainer.GetString(applyPath(filename), sources) ??
             resourceContainer.GetString(filename, sources);
 

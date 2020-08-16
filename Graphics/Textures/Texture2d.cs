@@ -89,7 +89,7 @@ namespace BrewLib.Graphics.Textures
             }
 
             if (resourceContainer == null) return null;
-            using (var stream = resourceContainer.GetStream(filename))
+            using (var stream = resourceContainer.GetStream(filename, ResourceSource.Embedded))
             {
                 if (stream == null)
                 {

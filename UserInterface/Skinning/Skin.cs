@@ -108,7 +108,7 @@ namespace BrewLib.UserInterface.Skinning
             if (File.Exists(filename))
                 data = File.ReadAllBytes(filename);
             else
-                data = resourceContainer?.GetBytes(filename);
+                data = resourceContainer?.GetBytes(filename, ResourceSource.Embedded);
             if (data == null) throw new FileNotFoundException(filename);
             return resolveIncludes(data.ToJObject(), resourceContainer);
         }

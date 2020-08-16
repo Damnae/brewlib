@@ -9,9 +9,9 @@ namespace BrewLib.Data
     {
         IEnumerable<string> ResourceNames { get; }
 
-        Stream GetStream(string filename, ResourceSource sources = ResourceSource.Embedded);
-        byte[] GetBytes(string filename, ResourceSource sources = ResourceSource.Embedded);
-        string GetString(string filename, ResourceSource sources = ResourceSource.Embedded);
+        Stream GetStream(string filename, ResourceSource sources);
+        byte[] GetBytes(string filename, ResourceSource sources);
+        string GetString(string filename, ResourceSource sources);
 
         SafeWriteStream GetWriteStream(string filename);
     }

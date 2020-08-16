@@ -27,7 +27,7 @@ namespace BrewLib.Data
             this.basePath = basePath ?? "resources";
         }
 
-        public Stream GetStream(string path, ResourceSource sources = ResourceSource.Embedded)
+        public Stream GetStream(string path, ResourceSource sources)
         {
             if (path == null)
                 return null;
