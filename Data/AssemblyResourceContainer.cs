@@ -29,6 +29,9 @@ namespace BrewLib.Data
 
         public Stream GetStream(string path, ResourceSource sources = ResourceSource.Embedded)
         {
+            if (path == null)
+                return null;
+
             if (Path.IsPathRooted(path))
             {
                 if (sources.HasFlag(ResourceSource.Absolute))
