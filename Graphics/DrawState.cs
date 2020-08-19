@@ -24,6 +24,7 @@ namespace BrewLib.Graphics
         public static int MaxDrawBuffers { get; private set; }
         public static bool ColorCorrected { get; private set; }
         public static int TextureBinds { get; private set; }
+        public static int MaxTextureSize { get; private set; }
 
         public static void Initialize(ResourceContainer resourceContainer, int width, int height)
         {
@@ -51,11 +52,13 @@ namespace BrewLib.Graphics
             maxGeometryTextureImageUnits = HasCapabilities(3, 2, "GL_ARB_geometry_shader4") ? GL.GetInteger(GetPName.MaxGeometryTextureImageUnits) : 0;
             maxCombinedTextureImageUnits = GL.GetInteger(GetPName.MaxCombinedTextureImageUnits);
             maxTextureCoords = GL.GetInteger(GetPName.MaxTextureCoords);
+            MaxTextureSize = GL.GetInteger(GetPName.MaxTextureSize);
 
             // glDrawBuffers requires opengl 2.0
             MaxDrawBuffers = HasCapabilities(2, 0) ? GL.GetInteger(GetPName.MaxDrawBuffers) : 1;
 
             Trace.WriteLine($"texture units available: fp:{maxFpTextureUnits} ps:{maxTextureImageUnits} vs:{maxVertexTextureImageUnits} gs:{maxGeometryTextureImageUnits} combined:{maxCombinedTextureImageUnits} coords:{maxTextureCoords}");
+            Trace.WriteLine($"max texture size: {MaxTextureSize}");
 
             samplerTextureIds = new int[maxTextureImageUnits];
             samplerTexturingModes = new TexturingModes[maxTextureImageUnits];
