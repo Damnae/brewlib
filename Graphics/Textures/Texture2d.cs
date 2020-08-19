@@ -155,6 +155,9 @@ namespace BrewLib.Graphics.Textures
             textureOptions = textureOptions ?? TextureOptions.Default;
             var sRgb = textureOptions.Srgb && DrawState.ColorCorrected;
 
+            var textureWidth = Math.Min(DrawState.MaxTextureSize, bitmap.Width);
+            var textureHeight = Math.Min(DrawState.MaxTextureSize, bitmap.Height);
+
             var textureId = GL.GenTexture();
             try
             {
@@ -162,7 +165,7 @@ namespace BrewLib.Graphics.Textures
 
                 textureOptions.WithBitmap(bitmap, b =>
                 {
-                    var bitmapData = b.LockBits(new Rectangle(0, 0, b.Width, b.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    var bitmapData = b.LockBits(new Rectangle(0, 0, textureWidth, textureHeight), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
                     GL.TexImage2D(TextureTarget.Texture2D, 0, sRgb ? PixelInternalFormat.SrgbAlpha : PixelInternalFormat.Rgba, bitmapData.Width, bitmapData.Height, 0, OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, bitmapData.Scan0);
                     if (textureOptions.GenerateMipmaps)
                         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
@@ -181,7 +184,7 @@ namespace BrewLib.Graphics.Textures
                 throw;
             }
 
-            return new Texture2d(textureId, bitmap.Width, bitmap.Height, description);
+            return new Texture2d(textureId, textureWidth, textureHeight, description);
         }
     }
 }
