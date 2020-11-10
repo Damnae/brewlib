@@ -71,7 +71,7 @@ namespace BrewLib.UserInterface
         {
             base.DrawBackground(drawContext, actualOpacity);
 
-            var progress = value / (MaxValue - MinValue);
+            var progress = (value - MinValue) / (MaxValue - MinValue);
             var minWidth = bar.MinSize.X;
 
             var barBounds = Bounds;

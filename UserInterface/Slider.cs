@@ -65,7 +65,8 @@ namespace BrewLib.UserInterface
         {
             var bounds = Bounds;
             var mouseX = Manager.Camera.FromScreen(position).X;
-            var value = (MaxValue - MinValue) * (mouseX - bounds.Left) / bounds.Width;
+
+            var value = MinValue + (MaxValue - MinValue) * (mouseX - bounds.Left) / bounds.Width;
             if (Step != 0) value = Math.Min((int)(value / Step) * Step, MaxValue);
             return value;
         }
