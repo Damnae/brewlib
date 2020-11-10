@@ -5,17 +5,16 @@ namespace BrewLib.Audio
 {
     public class FftStream : IDisposable
     {
-        private string path;
+        private readonly string path;
         private int stream;
 
-        private double duration;
-        public double Duration => duration;
+        public double Duration { get; }
 
         public FftStream(string path)
         {
             this.path = path;
             stream = Bass.CreateStream(path, 0, 0, BassFlags.Decode | BassFlags.Prescan);
-            duration = Bass.ChannelBytes2Seconds(stream, Bass.ChannelGetLength(stream));
+            Duration = Bass.ChannelBytes2Seconds(stream, Bass.ChannelGetLength(stream));
         }
 
         public float[] GetFft(double time)

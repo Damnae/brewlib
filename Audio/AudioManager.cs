@@ -2,13 +2,12 @@
 using ManagedBass;
 using System;
 using System.Collections.Generic;
-using System.Resources;
 
 namespace BrewLib.Audio
 {
     public class AudioManager : IDisposable
     {
-        private List<AudioChannel> audioChannels = new List<AudioChannel>();
+        private readonly List<AudioChannel> audioChannels = new List<AudioChannel>();
 
         private float volume = 1;
         public float Volume

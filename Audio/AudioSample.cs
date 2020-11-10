@@ -9,17 +9,15 @@ namespace BrewLib.Audio
     {
         private const int MaxSimultaneousPlayBacks = 8;
 
-        private string path;
-        public string Path => path;
-
         private int sample;
 
         public readonly AudioManager Manager;
+        public string Path { get; }
 
         internal AudioSample(AudioManager audioManager, string path, ResourceContainer resourceContainer)
         {
             Manager = audioManager;
-            this.path = path;
+            Path = path;
 
             sample = Bass.SampleLoad(path, 0, 0, MaxSimultaneousPlayBacks, BassFlags.SampleOverrideLongestPlaying);
             if (sample != 0) return;

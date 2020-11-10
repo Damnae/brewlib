@@ -182,7 +182,7 @@ namespace BrewLib.Audio
             return data;
         }
 
-        public void UpdateVolume()
+        internal void UpdateVolume()
         {
             if (channel == 0) return;
             Bass.ChannelSetAttribute(channel, ChannelAttribute.Volume, SoundUtil.FromLinearVolume(volume * Manager.Volume));

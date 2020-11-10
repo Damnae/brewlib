@@ -11,7 +11,7 @@ namespace BrewLib.Audio
         public delegate int CallbackDelegate(IntPtr buffer, int sampleCount);
 
         private readonly CallbackDelegate callback;
-        private int bytesPerSample;
+        private readonly int bytesPerSample;
         private int stream;
         private int decodeStream;
 

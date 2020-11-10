@@ -10,15 +10,14 @@ namespace BrewLib.Audio
 {
     public class AudioStream : AudioChannel
     {
-        private string path;
-        public string Path => path;
-
         private int stream;
         private int decodeStream;
 
+        public string Path { get; }
+
         internal AudioStream(AudioManager manager, string path, ResourceContainer resourceContainer) : base(manager)
         {
-            this.path = path;
+            Path = path;
             var flags = BassFlags.Decode | BassFlags.Prescan;
 
             decodeStream = Bass.CreateStream(path, 0, 0, flags);

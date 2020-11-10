@@ -9,7 +9,7 @@ namespace BrewLib.Audio
         private int stream;
         private int decodeStream;
 
-        private int bytesPerSample;
+        private readonly int bytesPerSample;
 
         internal AudioStreamPush(AudioManager manager, int frequency, int channels) : base(manager)
         {

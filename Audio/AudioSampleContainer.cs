@@ -8,8 +8,8 @@ namespace BrewLib.Audio
 {
     public class AudioSampleContainer : IDisposable
     {
-        private AudioManager audioManager;
-        private ResourceContainer resourceContainer;
+        private readonly AudioManager audioManager;
+        private readonly ResourceContainer resourceContainer;
 
         private Dictionary<string, AudioSample> samples = new Dictionary<string, AudioSample>();
 
