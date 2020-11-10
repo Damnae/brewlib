@@ -1,16 +1,18 @@
-﻿using System;
-
-namespace BrewLib.Time
+﻿namespace BrewLib.Time
 {
-    public abstract class TimeSource
+    public interface ReadOnlyTimeSource
     {
-        public abstract double Current { get; set; }
-        public abstract double Previous { get; }
+        double Current { get; }
 
-        public double Elapsed => Current - Previous;
+        double TimeFactor { get; }
+        bool Playing { get; }
+    }
 
-        public event EventHandler Changed;
-        protected void NotifyTimeChanged()
-            => Changed?.Invoke(this, EventArgs.Empty);
+    public interface TimeSource : ReadOnlyTimeSource
+    {
+        new bool Playing { get; set; }
+        new double TimeFactor { get; set; }
+
+        bool Seek(double time);
     }
 }

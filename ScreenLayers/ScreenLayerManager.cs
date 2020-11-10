@@ -13,8 +13,8 @@ namespace BrewLib.ScreenLayers
     {
         private GameWindow window;
 
-        private TimeSource timeSource;
-        public TimeSource TimeSource => timeSource;
+        private FrameTimeSource timeSource;
+        public FrameTimeSource TimeSource => timeSource;
 
         private object context;
         public T GetContext<T>() => (T)context;
@@ -31,7 +31,7 @@ namespace BrewLib.ScreenLayers
 
         public event Action<ScreenLayer> LayerAdded;
 
-        public ScreenLayerManager(GameWindow window, TimeSource timeSource, object context)
+        public ScreenLayerManager(GameWindow window, FrameTimeSource timeSource, object context)
         {
             this.window = window;
             this.timeSource = timeSource;
