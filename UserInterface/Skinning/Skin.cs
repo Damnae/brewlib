@@ -93,9 +93,9 @@ namespace BrewLib.UserInterface.Skinning
         #region Loading
 
         public void Load(string filename, ResourceContainer resourceContainer = null)
-            => Load(loadJson(filename, resourceContainer), resourceContainer);
+            => load(loadJson(filename, resourceContainer), resourceContainer);
 
-        public void Load(JObject data, ResourceContainer resourceContainer = null)
+        private void load(JObject data, ResourceContainer resourceContainer = null)
         {
             //File.WriteAllText("_skin_debug.json", data.ToString());
             loadDrawables(data["drawables"]);
