@@ -10,8 +10,8 @@
 
     public interface TimeSource : ReadOnlyTimeSource
     {
-        new bool Playing { get; set; }
         new double TimeFactor { get; set; }
+        new bool Playing { get; set; }
 
         bool Seek(double time);
     }
