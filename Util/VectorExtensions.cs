@@ -20,5 +20,18 @@ namespace BrewLib.Util
             var length = v.LengthSquared;
             return length > max * max ? v / (float)Math.Sqrt(length) : v;
         }
+
+        public static Vector2 Project(this Vector2 v, Vector2 line0, Vector2 line1)
+        {
+            var m = (line1.Y - line0.Y) / (line1.X - line0.X);
+            var b = line0.Y - (m * line0.X);
+
+            return new Vector2(
+                (m * v.Y + v.X - m * b) / (m * m + 1),
+                (m * m * v.Y + m * v.X + b) / (m * m + 1));
+        }
+
+        public static float Side(this Vector2 v, Vector2 line0, Vector2 line1)
+            => (line1.X - line0.X) * (v.Y - line0.Y) - (line1.Y - line0.Y) * (v.X - line0.X);
     }
 }
