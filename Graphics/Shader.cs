@@ -118,14 +118,23 @@ namespace BrewLib.Graphics
             return -1;
         }
 
-        public int GetUniformLocation(string name, int index = -1, string field = null)
+        public int TryGetUniformLocation(string name, int index = -1, string field = null)
         {
             var identifier = GetUniformIdentifier(name, index, field);
 
             if (uniforms.TryGetValue(identifier, out Property<ActiveUniformType> property))
                 return property.Location;
 
-            throw new ArgumentException($"{identifier} isn't a valid uniform identifier");
+            return -1;
+        }
+
+        public int GetUniformLocation(string name, int index = -1, string field = null)
+        {
+            var location = TryGetUniformLocation(name, index, field);
+            if (location < 0)
+                throw new ArgumentException($"{name} isn't a valid uniform identifier");
+
+            return location;
         }
 
         public bool HasUniform(string name, int index = -1, string field = null)
