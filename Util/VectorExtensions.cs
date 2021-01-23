@@ -13,12 +13,12 @@ namespace BrewLib.Util
         public static Vector2 ClampLength(this Vector2 v, float max)
         {
             var length = v.LengthSquared;
-            return length > max * max ? v / (float)Math.Sqrt(length) : v;
+            return length > max * max ? v / (float)Math.Sqrt(length) * max : v;
         }
         public static Vector3 ClampLength(this Vector3 v, float max)
         {
             var length = v.LengthSquared;
-            return length > max * max ? v / (float)Math.Sqrt(length) : v;
+            return length > max * max ? v / (float)Math.Sqrt(length) * max : v;
         }
 
         public static Vector2 Project(this Vector2 v, Vector2 line0, Vector2 line1)

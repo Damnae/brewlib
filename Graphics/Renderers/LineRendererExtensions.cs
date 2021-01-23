@@ -29,7 +29,7 @@ namespace BrewLib.Graphics.Renderers
         }
 
         public static void DrawCircle(this LineRenderer line, Vector2 center, float radius, Color4 color, float precision = 1)
-            => line.DrawCircle(new Vector3(center.X, center.Y, 0), radius, color, precision = 1);
+            => line.DrawCircle(new Vector3(center.X, center.Y, 0), radius, color, precision);
 
         public static void DrawSquare(this LineRenderer line, Vector3 from, Vector3 to, Color4 color)
         {
