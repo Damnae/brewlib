@@ -21,8 +21,8 @@ namespace BrewLib.Graphics
         public DepthState Depth = DepthState.Default2d;
         public PointSpriteState PointSprite = PointSpriteState.Default;
 
-        private static List<FieldInfo> fields = new List<FieldInfo>(typeof(RenderStates).GetFields());
-        private static Dictionary<Type, RenderState> currentStates = new Dictionary<Type, RenderState>();
+        private static readonly List<FieldInfo> fields = new List<FieldInfo>(typeof(RenderStates).GetFields());
+        private static readonly Dictionary<Type, RenderState> currentStates = new Dictionary<Type, RenderState>();
 
         public void Apply()
         {
@@ -53,11 +53,11 @@ namespace BrewLib.Graphics
 
     public class BlendingFactorState : RenderState, IEquatable<BlendingFactorState>
     {
-        private bool enabled = true;
-        private BlendingFactorSrc src = BlendingFactorSrc.SrcAlpha;
-        private BlendingFactorDest dest = BlendingFactorDest.OneMinusSrcAlpha;
-        private BlendingFactorSrc alphaSrc = BlendingFactorSrc.SrcAlpha;
-        private BlendingFactorDest alphaDest = BlendingFactorDest.OneMinusSrcAlpha;
+        private readonly bool enabled = true;
+        private readonly BlendingFactorSrc src = BlendingFactorSrc.SrcAlpha;
+        private readonly BlendingFactorDest dest = BlendingFactorDest.OneMinusSrcAlpha;
+        private readonly BlendingFactorSrc alphaSrc = BlendingFactorSrc.SrcAlpha;
+        private readonly BlendingFactorDest alphaDest = BlendingFactorDest.OneMinusSrcAlpha;
 
         public static BlendingFactorState Default = new BlendingFactorState();
 
@@ -129,8 +129,8 @@ namespace BrewLib.Graphics
 
     public class BlendingEquationState : RenderState, IEquatable<BlendingEquationState>
     {
-        private BlendEquationMode colorMode = BlendEquationMode.FuncAdd;
-        private BlendEquationMode alphaMode = BlendEquationMode.FuncAdd;
+        private readonly BlendEquationMode colorMode = BlendEquationMode.FuncAdd;
+        private readonly BlendEquationMode alphaMode = BlendEquationMode.FuncAdd;
 
         public static BlendingEquationState Default = new BlendingEquationState();
 
@@ -155,8 +155,8 @@ namespace BrewLib.Graphics
 
     public class DepthState : RenderState, IEquatable<DepthState>
     {
-        private DepthFunction? test;
-        private bool write;
+        private readonly DepthFunction? test;
+        private readonly bool write;
 
         public static DepthState Default2d = new DepthState(null, false);
         public static DepthState Default3dOpaque = new DepthState(DepthFunction.Less, true);
@@ -184,7 +184,7 @@ namespace BrewLib.Graphics
 
     public class CullFaceState : RenderState, IEquatable<CullFaceState>
     {
-        private CullFaceMode? mode;
+        private readonly CullFaceMode? mode;
 
         public static CullFaceState Default2d = new CullFaceState(null);
         public static CullFaceState Default3d = new CullFaceState(CullFaceMode.Back);
@@ -208,8 +208,8 @@ namespace BrewLib.Graphics
 
     public class PointSpriteState : RenderState, IEquatable<PointSpriteState>
     {
-        private bool enabled;
-        private bool sizeEnabled;
+        private readonly bool enabled;
+        private readonly bool sizeEnabled;
 
         public static readonly PointSpriteState Default = new PointSpriteState(false, false);
 
