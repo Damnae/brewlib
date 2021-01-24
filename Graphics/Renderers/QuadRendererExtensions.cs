@@ -138,6 +138,9 @@ namespace BrewLib.Graphics.Renderers
         }
 
         public static void DrawArc(this QuadRenderer renderer, Vector2 center, float innerRadius, float outerRadius, float startAngle, float angleLength, Texture2dRegion texture, Color4 color, float precision = 1)
+            => DrawArc(renderer, center, innerRadius, outerRadius, startAngle, angleLength, texture, color, color, precision);
+
+        public static void DrawArc(this QuadRenderer renderer, Vector2 center, float innerRadius, float outerRadius, float startAngle, float angleLength, Texture2dRegion texture, Color4 innerColor, Color4 outerColor, float precision = 1)
         {
             texture = texture ?? DrawState.WhitePixel;
             var uMin = texture.UvBounds.Left;
@@ -151,7 +154,8 @@ namespace BrewLib.Graphics.Renderers
 
             var u = (uMax - uMin) / lineCount;
             var angleStep = angleLength / lineCount;
-            var colorRgba = color.ToRgba();
+            var innerColorRgba = innerColor.ToRgba();
+            var outerColorRgba = outerColor.ToRgba();
 
             var initialUnit = new Vector2((float)Math.Cos(startAngle), (float)Math.Sin(startAngle));
             var primitive = new QuadPrimitive
@@ -169,10 +173,10 @@ namespace BrewLib.Graphics.Renderers
                 v3 = vMax,
                 v4 = vMax,
 
-                color1 = colorRgba,
-                color2 = colorRgba,
-                color3 = colorRgba,
-                color4 = colorRgba,
+                color1 = outerColorRgba,
+                color2 = outerColorRgba,
+                color3 = innerColorRgba,
+                color4 = innerColorRgba,
             };
 
             for (var i = 1; i <= lineCount; i++)
