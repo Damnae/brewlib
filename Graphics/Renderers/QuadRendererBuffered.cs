@@ -22,6 +22,8 @@ namespace BrewLib.Graphics.Renderers
         public delegate int CustomTextureBinder(BindableTexture texture);
         public CustomTextureBinder CustomTextureBind;
 
+        public Action FlushAction;
+
         #region Default Shader
 
         public static Shader CreateDefaultShader()
@@ -49,15 +51,8 @@ namespace BrewLib.Graphics.Renderers
         #endregion
 
         private Shader shader;
-        private bool ownsShader;
         public Shader Shader => ownsShader ? null : shader;
-
-        private Action flushAction;
-        public Action FlushAction
-        {
-            get { return flushAction; }
-            set { flushAction = value; }
-        }
+        private readonly bool ownsShader;
 
         private PrimitiveStreamer<QuadPrimitive> primitiveStreamer;
         private QuadPrimitive[] primitives;
@@ -105,12 +100,12 @@ namespace BrewLib.Graphics.Renderers
         public int BufferWaitCount => primitiveStreamer.BufferWaitCount;
         public int LargestBatch { get; private set; }
 
-        public QuadRendererBuffered(Shader shader = null, Action flushAction = null, int maxQuadsPerBatch = 4096, int primitiveBufferSize = 0) :
-            this(PrimitiveStreamerUtil<QuadPrimitive>.DefaultCreatePrimitiveStreamer, shader, flushAction, maxQuadsPerBatch, primitiveBufferSize)
+        public QuadRendererBuffered(Shader shader = null, int maxQuadsPerBatch = 4096, int primitiveBufferSize = 0) :
+            this(PrimitiveStreamerUtil<QuadPrimitive>.DefaultCreatePrimitiveStreamer, shader, maxQuadsPerBatch, primitiveBufferSize)
         {
         }
 
-        public QuadRendererBuffered(CreatePrimitiveStreamerDelegate<QuadPrimitive> createPrimitiveStreamer, Shader shader = null, Action flushAction = null, int maxQuadsPerBatch = 4096, int primitiveBufferSize = 0)
+        public QuadRendererBuffered(CreatePrimitiveStreamerDelegate<QuadPrimitive> createPrimitiveStreamer, Shader shader = null, int maxQuadsPerBatch = 4096, int primitiveBufferSize = 0)
         {
             if (shader == null)
             {
@@ -119,7 +114,6 @@ namespace BrewLib.Graphics.Renderers
             }
 
             this.maxQuadsPerBatch = maxQuadsPerBatch;
-            this.flushAction = flushAction;
             this.shader = shader;
 
             var primitiveBatchSize = Math.Max(maxQuadsPerBatch, primitiveBufferSize / (VertexPerQuad * VertexDeclaration.VertexSize));
@@ -195,7 +189,7 @@ namespace BrewLib.Graphics.Renderers
                     GL.Uniform1(shader.GetUniformLocation(TextureUniformName), currentSamplerUnit);
                 }
 
-                flushAction?.Invoke();
+                FlushAction?.Invoke();
             }
 
             primitiveStreamer.Render(PrimitiveType.Quads, primitives, quadsInBatch, quadsInBatch * VertexPerQuad, canBuffer);

@@ -20,6 +20,8 @@ namespace BrewLib.Graphics.Renderers
         public static readonly VertexDeclaration VertexDeclaration =
             new VertexDeclaration(VertexAttribute.CreatePosition3d(), VertexAttribute.CreateColor(true));
 
+        public Action FlushAction;
+
         #region Default Shader
 
         public static Shader CreateDefaultShader()
@@ -43,15 +45,8 @@ namespace BrewLib.Graphics.Renderers
         #endregion
 
         private Shader shader;
-        private bool ownsShader;
         public Shader Shader => ownsShader ? null : shader;
-
-        private Action flushAction;
-        public Action FlushAction
-        {
-            get { return flushAction; }
-            set { flushAction = value; }
-        }
+        private readonly bool ownsShader;
 
         private PrimitiveStreamer<LinePrimitive> primitiveStreamer;
         private LinePrimitive[] primitives;
@@ -96,7 +91,7 @@ namespace BrewLib.Graphics.Renderers
         public int BufferWaitCount => primitiveStreamer.BufferWaitCount;
         public int LargestBatch { get; private set; }
 
-        public LineRendererBuffered(Shader shader = null, Action flushAction = null, int maxLinesPerBatch = 4096, int primitiveBufferSize = 0) :
+        public LineRendererBuffered(Shader shader = null, int maxLinesPerBatch = 4096, int primitiveBufferSize = 0) :
             this((vertexDeclaration, minRenderableVertexCount) =>
             {
                 if (PrimitiveStreamerPersistentMap<LinePrimitive>.HasCapabilities())
@@ -107,11 +102,11 @@ namespace BrewLib.Graphics.Renderers
                     return new PrimitiveStreamerVbo<LinePrimitive>(vertexDeclaration);
                 throw new NotSupportedException();
 
-            }, shader, flushAction, maxLinesPerBatch, primitiveBufferSize)
+            }, shader, maxLinesPerBatch, primitiveBufferSize)
         {
         }
 
-        public LineRendererBuffered(CreatePrimitiveStreamerDelegate<LinePrimitive> createPrimitiveStreamer, Shader shader = null, Action flushAction = null, int maxLinesPerBatch = 4096, int primitiveBufferSize = 0)
+        public LineRendererBuffered(CreatePrimitiveStreamerDelegate<LinePrimitive> createPrimitiveStreamer, Shader shader = null, int maxLinesPerBatch = 4096, int primitiveBufferSize = 0)
         {
             if (shader == null)
             {
@@ -120,7 +115,6 @@ namespace BrewLib.Graphics.Renderers
             }
 
             this.maxLinesPerBatch = maxLinesPerBatch;
-            this.flushAction = flushAction;
             this.shader = shader;
 
             var primitiveBatchSize = Math.Max(maxLinesPerBatch, primitiveBufferSize / (VertexPerLine * VertexDeclaration.VertexSize));
@@ -185,7 +179,7 @@ namespace BrewLib.Graphics.Renderers
                 var combinedMatrix = transformMatrix * Camera.ProjectionView;
                 GL.UniformMatrix4(shader.GetUniformLocation(CombinedMatrixUniformName), false, ref combinedMatrix);
 
-                flushAction?.Invoke();
+                FlushAction?.Invoke();
             }
 
             primitiveStreamer.Render(PrimitiveType.Lines, primitives, linesInBatch, linesInBatch * VertexPerLine, canBuffer);
