@@ -34,6 +34,9 @@ namespace BrewLib.Graphics.Textures
 
         public Texture2dRegion Get(string filename)
         {
+            if (filename == null)
+                return null;
+
             filename = PathHelper.WithStandardSeparators(filename);
             if (!textures.TryGetValue(filename, out Texture2dRegion texture))
             {
