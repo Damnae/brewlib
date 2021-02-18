@@ -1,13 +1,13 @@
 ﻿using Brewlib.Util;
 using BrewLib.Data;
-using BrewLib.Util;
-using Newtonsoft.Json.Linq;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using Tiny;
+using Tiny.Formats.Json;
 
 namespace BrewLib.Graphics.Textures
 {
@@ -68,22 +68,27 @@ namespace BrewLib.Graphics.Textures
 
         public static TextureOptions Load(string filename, ResourceContainer resourceContainer = null)
         {
-            byte[] data;
+            TinyToken token = null;
             if (File.Exists(filename))
-                data = File.ReadAllBytes(filename);
-            else data = resourceContainer?.GetBytes(filename, ResourceSource.Embedded);
+                token = TinyToken.Read(filename);
+            else
+            {
+                var data = resourceContainer?.GetString(filename, ResourceSource.Embedded);
+                if (data != null)
+                    token = TinyToken.ReadString<JsonFormat>(data);
+            }
 
-            return data != null ? load(data.ToJObject()) : null;
+            return token != null ? load(token) : null;
         }
 
-        private static TextureOptions load(JObject data)
+        private static TextureOptions load(TinyToken data)
         {
             var options = new TextureOptions();
             parseFields(options, data);
             return options;
         }
 
-        private static void parseFields(object obj, JToken data)
+        private static void parseFields(object obj, TinyToken data)
         {
             var type = obj.GetType();
             while (type != typeof(object))
@@ -91,10 +96,10 @@ namespace BrewLib.Graphics.Textures
                 var fields = type.GetFields();
                 foreach (var field in fields)
                 {
-                    var fieldData = data[field.Name];
+                    var fieldType = field.FieldType;
+                    var fieldData = data.Value<TinyToken>(field.Name);
                     if (fieldData != null)
                     {
-                        var fieldType = field.FieldType;
                         var parser = getFieldParser(fieldType);
                         if (parser != null)
                         {
@@ -108,14 +113,14 @@ namespace BrewLib.Graphics.Textures
             }
         }
 
-        private static Func<JToken, object> getFieldParser(Type fieldType)
+        private static Func<TinyToken, object> getFieldParser(Type fieldType)
         {
             if (fieldType.IsEnum)
-                return data => Enum.Parse(fieldType, data.Value<string>());
+                return (data) => Enum.Parse(fieldType, data.Value<string>());
 
             while (fieldType != typeof(object))
             {
-                if (fieldParsers.TryGetValue(fieldType, out Func<JToken, object> parser))
+                if (fieldParsers.TryGetValue(fieldType, out var parser))
                     return parser;
 
                 fieldType = fieldType.BaseType;
@@ -123,7 +128,7 @@ namespace BrewLib.Graphics.Textures
             return null;
         }
 
-        private static Dictionary<Type, Func<JToken, object>> fieldParsers = new Dictionary<Type, Func<JToken, object>>()
+        private static Dictionary<Type, Func<TinyToken, object>> fieldParsers = new Dictionary<Type, Func<TinyToken, object>>()
         {
             [typeof(string)] = (data) => data.Value<string>(),
             [typeof(float)] = (data) => data.Value<float>(),
