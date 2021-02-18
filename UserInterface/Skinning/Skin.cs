@@ -3,13 +3,14 @@ using BrewLib.Graphics.Drawables;
 using BrewLib.Graphics.Textures;
 using BrewLib.UserInterface.Skinning.Styles;
 using BrewLib.Util;
-using Newtonsoft.Json.Linq;
 using OpenTK;
 using OpenTK.Graphics;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Tiny;
+using Tiny.Formats.Json;
 
 namespace BrewLib.UserInterface.Skinning
 {
@@ -93,71 +94,82 @@ namespace BrewLib.UserInterface.Skinning
         #region Loading
 
         public void Load(string filename, ResourceContainer resourceContainer = null)
-            => load(loadJson(filename, resourceContainer), resourceContainer);
+            => load(loadJson(filename, resourceContainer));
 
-        private void load(JObject data, ResourceContainer resourceContainer = null)
+        private void load(TinyObject data)
         {
-            //File.WriteAllText("_skin_debug.json", data.ToString());
-            loadDrawables(data["drawables"]);
-            loadStyles(data["styles"]);
+            var constants = data.Value<TinyObject>("constants");
+
+            loadDrawables(data.Value<TinyObject>("drawables"), constants);
+            loadStyles(data.Value<TinyObject>("styles"), constants);
         }
 
-        private JObject loadJson(string filename, ResourceContainer resourceContainer)
+        private TinyObject loadJson(string filename, ResourceContainer resourceContainer)
         {
-            byte[] data;
+            TinyToken token = null;
             if (File.Exists(filename))
-                data = File.ReadAllBytes(filename);
+                token = TinyToken.Read(filename);
             else
-                data = resourceContainer?.GetBytes(filename, ResourceSource.Embedded);
-            if (data == null) throw new FileNotFoundException(filename);
-            return resolveIncludes(data.ToJObject(), resourceContainer);
+            {
+                var data = resourceContainer?.GetString(filename, ResourceSource.Embedded);
+                if (data != null)
+                    token = TinyToken.ReadString<JsonFormat>(data);
+            }
+            if (token == null) throw new FileNotFoundException(filename);
+
+            if (token is TinyObject tinyObject)
+            {
+                //token.Write(Path.ChangeExtension(filename, ".yaml"));
+                return resolveIncludes(tinyObject, resourceContainer);
+            }
+
+            throw new InvalidDataException($"{filename} does not contain an object");
         }
 
-        private JObject resolveIncludes(JObject data, ResourceContainer resourceContainer)
+        private TinyObject resolveIncludes(TinyObject data, ResourceContainer resourceContainer)
         {
-            if (data["include"] != null)
+            var includes = data.Value<TinyArray>("include");
+            if (includes != null)
             {
-                var snapshot = new List<JToken>(data["include"]);
+                var snapshot = new List<TinyToken>(includes);
                 foreach (var include in snapshot)
                 {
                     var path = include.Value<string>();
                     var includedData = loadJson(path, resourceContainer);
-                    data.Merge(includedData, new JsonMergeSettings()
-                    {
-                        MergeArrayHandling = MergeArrayHandling.Union,
-                        MergeNullValueHandling = MergeNullValueHandling.Merge,
-                    });
+
+                    data.Merge(includedData);
                 }
             }
             return data;
         }
 
-        private void loadDrawables(JToken data)
+        private void loadDrawables(TinyObject data, TinyObject constants)
         {
             if (data == null) return;
 
-            foreach (var drawableData in data)
+            foreach (var entry in data)
             {
-                var drawableName = drawableData.GetName();
+                var name = entry.Key;
+                var value = entry.Value;
                 try
                 {
-                    var drawable = loadDrawable(drawableData.First);
-                    drawables.Add(drawableName, drawable);
+                    var drawable = loadDrawable(value, constants);
+                    drawables.Add(name, drawable);
                 }
                 catch (TypeLoadException)
                 {
-                    Trace.WriteLine($"Skin - Drawable type for {drawableName} doesn't exist");
+                    Trace.WriteLine($"Skin - Drawable type for {name} doesn't exist");
                 }
                 catch (Exception e)
                 {
-                    Trace.WriteLine($"Skin - Failed to load drawable {drawableName}: {e}");
+                    Trace.WriteLine($"Skin - Failed to load drawable {name}: {e}");
                 }
             }
         }
 
-        private Drawable loadDrawable(JToken data)
+        private Drawable loadDrawable(TinyToken data, TinyObject constants)
         {
-            if (data.Type == JTokenType.String)
+            if (data.Type == TinyTokenType.String)
             {
                 var value = data.Value<string>();
                 if (string.IsNullOrEmpty(value))
@@ -165,42 +177,42 @@ namespace BrewLib.UserInterface.Skinning
 
                 var drawable = GetDrawable(value);
                 if (drawable == NullDrawable.Instance)
-                    throw new InvalidDataException($"Referenced drawable '{value}' must be defined before '{data.Path}'");
+                    throw new InvalidDataException($"Referenced drawable '{value}' must be defined before '{data}'");
                 return drawable;
             }
-            else if (data.Type == JTokenType.Array)
+            else if (data.Type == TinyTokenType.Array)
             {
                 var composite = new CompositeDrawable();
-                foreach (var arrayDrawableData in data)
+                foreach (var arrayDrawableData in data.Values<TinyToken>())
                 {
-                    var drawable = loadDrawable(arrayDrawableData);
+                    var drawable = loadDrawable(arrayDrawableData, constants);
                     composite.Drawables.Add(drawable);
                 }
                 return composite;
             }
             else
             {
-                var drawableTypeData = data["_type"];
-                if (drawableTypeData == null)
-                    throw new InvalidDataException($"Drawable '{data.Path}' must declare a type");
+                var drawableTypeName = data.Value<string>("_type");
+                if (drawableTypeName == null)
+                    throw new InvalidDataException($"Drawable '{data}' must declare a type");
 
-                var drawableTypeName = drawableTypeData.Value<string>();
                 var drawableType = ResolveDrawableType(drawableTypeName);
                 var drawable = (Drawable)Activator.CreateInstance(drawableType);
 
-                parseFields(drawable, data, null);
+                parseFields(drawable, data.Value<TinyObject>(), null, constants);
 
                 return drawable;
             }
         }
 
-        private void loadStyles(JToken data)
+        private void loadStyles(TinyObject data, TinyObject constants)
         {
             if (data == null) return;
 
-            foreach (var styleTypeData in data)
+            foreach (var styleTypeEntry in data)
             {
-                var styleTypeName = styleTypeData.GetName();
+                var styleTypeName = styleTypeEntry.Key;
+                var styleTypeObject = styleTypeEntry.Value.Value<TinyObject>();
                 try
                 {
                     var widgetType = ResolveWidgetType(styleTypeName);
@@ -210,9 +222,10 @@ namespace BrewLib.UserInterface.Skinning
                         stylesPerType.Add(styleType, styles = new Dictionary<string, WidgetStyle>());
 
                     WidgetStyle defaultStyle = null;
-                    foreach (var styleData in styleTypeData.First)
+                    foreach (var styleEntry in styleTypeObject)
                     {
-                        var styleName = styleData.GetName();
+                        var styleName = styleEntry.Key;
+                        var styleObject = styleEntry.Value.Value<TinyObject>();
                         try
                         {
                             var style = (WidgetStyle)Activator.CreateInstance(styleType);
@@ -221,19 +234,17 @@ namespace BrewLib.UserInterface.Skinning
                             var implicitParentStyleName = getImplicitParentStyleName(styleName);
                             if (implicitParentStyleName != null)
                             {
-                                if (!styles.TryGetValue(implicitParentStyleName, out parentStyle) && styleTypeData.First[implicitParentStyleName] != null)
+                                if (!styles.TryGetValue(implicitParentStyleName, out parentStyle) && styleTypeObject.Value<TinyToken>(implicitParentStyleName) != null)
                                     throw new InvalidDataException($"Implicit parent style '{implicitParentStyleName}' style must be defined before '{styleName}'");
 
                                 parentStyle = GetStyle(styleType, implicitParentStyleName);
                             }
 
-                            var parentData = styleData.First["_parent"];
-                            //if (implicitParentStyleName != null && parentData != null)
-                            //    throw new InvalidDataException($"Style '{styleName}' is implicitely parented to '{implicitParentStyleName}' and must not declare a parent");
-                            if (parentData != null && !styles.TryGetValue(parentData.Value<string>(), out parentStyle))
-                                throw new InvalidDataException($"Parent style '{parentData.Value<string>()}' style must be defined before '{styleName}'");
+                            var parentName = styleObject.Value<string>("_parent");
+                            if (parentName != null && !styles.TryGetValue(parentName, out parentStyle))
+                                throw new InvalidDataException($"Parent style '{parentName}' style must be defined before '{styleName}'");
 
-                            parseFields(style, styleData.First, parentStyle);
+                            parseFields(style, styleObject, parentStyle, constants);
 
                             if (defaultStyle == null)
                                 if (styleName == "default") defaultStyle = style;
@@ -262,7 +273,7 @@ namespace BrewLib.UserInterface.Skinning
             }
         }
 
-        private void parseFields(object skinnable, JToken data, object parent)
+        private void parseFields(object skinnable, TinyObject data, object parent, TinyObject constants)
         {
             var type = skinnable.GetType();
             while (type != typeof(object))
@@ -270,14 +281,14 @@ namespace BrewLib.UserInterface.Skinning
                 var fields = type.GetFields();
                 foreach (var field in fields)
                 {
-                    var fieldData = resolveConstants(data[field.Name]);
+                    var fieldData = resolveConstants(data.Value<TinyToken>(field.Name), constants);
                     if (fieldData != null)
                     {
                         var fieldType = field.FieldType;
                         var parser = getFieldParser(fieldType);
                         if (parser != null)
                         {
-                            var value = parser.Invoke(fieldData, this);
+                            var value = parser.Invoke(fieldData, constants, this);
                             field.SetValue(skinnable, value);
                         }
                         else Trace.WriteLine($"Skin - No parser for {fieldType}");
@@ -289,10 +300,9 @@ namespace BrewLib.UserInterface.Skinning
             }
         }
 
-        private static JToken resolveConstants(JToken fieldData)
+        private static TinyToken resolveConstants(TinyToken fieldData, TinyObject constants)
         {
-            var constants = fieldData?.Root["constants"];
-            while (fieldData != null && fieldData.Type == JTokenType.String)
+            while (fieldData != null && fieldData.Type == TinyTokenType.String)
             {
                 var fieldString = fieldData.Value<string>();
                 if (fieldString.StartsWith("@"))
@@ -305,8 +315,8 @@ namespace BrewLib.UserInterface.Skinning
             return fieldData;
         }
 
-        private static T resolve<T>(JToken data)
-            => resolveConstants(data).Value<T>();
+        private static T resolve<T>(TinyToken data, TinyObject constants)
+            => resolveConstants(data, constants).Value<T>();
 
         private static string getBaseStyleName(string styleName)
         {
@@ -329,14 +339,14 @@ namespace BrewLib.UserInterface.Skinning
             return styleName.Substring(0, index);
         }
 
-        private static Func<JToken, Skin, object> getFieldParser(Type fieldType)
+        private static Func<TinyToken, TinyObject, Skin, object> getFieldParser(Type fieldType)
         {
             if (fieldType.IsEnum)
-                return (data, skin) => Enum.Parse(fieldType, data.Value<string>());
+                return (data, constants, skin) => Enum.Parse(fieldType, data.Value<string>());
 
             while (fieldType != typeof(object))
             {
-                if (fieldParsers.TryGetValue(fieldType, out Func<JToken, Skin, object> parser))
+                if (fieldParsers.TryGetValue(fieldType, out var parser))
                     return parser;
 
                 fieldType = fieldType.BaseType;
@@ -345,24 +355,24 @@ namespace BrewLib.UserInterface.Skinning
         }
 
         private static System.Drawing.ColorConverter colorConverter = new System.Drawing.ColorConverter();
-        private static Dictionary<Type, Func<JToken, Skin, object>> fieldParsers = new Dictionary<Type, Func<JToken, Skin, object>>()
+        private static Dictionary<Type, Func<TinyToken, TinyObject, Skin, object>> fieldParsers = new Dictionary<Type, Func<TinyToken, TinyObject, Skin, object>>()
         {
-            [typeof(string)] = (data, skin) => data.Value<string>(),
-            [typeof(float)] = (data, skin) => data.Value<float>(),
-            [typeof(double)] = (data, skin) => data.Value<double>(),
-            [typeof(int)] = (data, skin) => data.Value<int>(),
-            [typeof(bool)] = (data, skin) => data.Value<bool>(),
-            [typeof(Texture2dRegion)] = (data, skin) => skin.TextureContainer.Get(data.Value<string>()),
-            [typeof(Drawable)] = (data, skin) => skin.loadDrawable(data),
-            [typeof(Vector2)] = (data, skin) =>
+            [typeof(string)] = (data, constants, skin) => data.Value<string>(),
+            [typeof(float)] = (data, constants, skin) => data.Value<float>(),
+            [typeof(double)] = (data, constants, skin) => data.Value<double>(),
+            [typeof(int)] = (data, constants, skin) => data.Value<int>(),
+            [typeof(bool)] = (data, constants, skin) => data.Value<bool>(),
+            [typeof(Texture2dRegion)] = (data, constants, skin) => skin.TextureContainer.Get(data.Value<string>()),
+            [typeof(Drawable)] = (data, constants, skin) => skin.loadDrawable(data.Value<TinyToken>(), constants),
+            [typeof(Vector2)] = (data, constants, skin) =>
             {
-                if (data.Type == JTokenType.Array)
-                    return new Vector2(resolve<float>(data[0]), resolve<float>(data[1]));
+                if (data is TinyArray tinyArray)
+                    return new Vector2(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants));
                 throw new InvalidDataException($"Incorrect vector2 format: {data}");
             },
-            [typeof(Color4)] = (data, skin) =>
+            [typeof(Color4)] = (data, constants, skin) =>
             {
-                if (data.Type == JTokenType.String)
+                if (data.Type == TinyTokenType.String)
                 {
                     var value = data.Value<string>();
                     if (value.StartsWith("#"))
@@ -376,25 +386,25 @@ namespace BrewLib.UserInterface.Skinning
                         return colorMethod.Invoke(null, null);
                 }
 
-                if (data.Type == JTokenType.Array)
-                    switch (((JArray)data).Count)
+                if (data is TinyArray tinyArray)
+                    switch (tinyArray.Count)
                     {
-                        case 3: return new Color4(resolve<float>(data[0]), resolve<float>(data[1]), resolve<float>(data[2]), 1f);
+                        case 3: return new Color4(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants), resolve<float>(tinyArray[2], constants), 1f);
                         default:
-                        case 4: return new Color4(resolve<float>(data[0]), resolve<float>(data[1]), resolve<float>(data[2]), resolve<float>(data[3]));
+                        case 4: return new Color4(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants), resolve<float>(tinyArray[2], constants), resolve<float>(tinyArray[3], constants));
                     }
                 throw new InvalidDataException($"Incorrect color format: {data}");
             },
-            [typeof(FourSide)] = (data, skin) =>
+            [typeof(FourSide)] = (data, constants, skin) =>
             {
-                if (data.Type == JTokenType.Array)
-                    switch (((JArray)data).Count)
+                if (data is TinyArray tinyArray)
+                    switch (tinyArray.Count)
                     {
-                        case 1: return new FourSide(resolve<float>(data[0]));
-                        case 2: return new FourSide(resolve<float>(data[0]), resolve<float>(data[1]));
-                        case 3: return new FourSide(resolve<float>(data[0]), resolve<float>(data[1]), resolve<float>(data[2]));
+                        case 1: return new FourSide(resolve<float>(tinyArray[0], constants));
+                        case 2: return new FourSide(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants));
+                        case 3: return new FourSide(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants), resolve<float>(tinyArray[2], constants));
                         default:
-                        case 4: return new FourSide(resolve<float>(data[0]), resolve<float>(data[1]), resolve<float>(data[2]), resolve<float>(data[3]));
+                        case 4: return new FourSide(resolve<float>(tinyArray[0], constants), resolve<float>(tinyArray[1], constants), resolve<float>(tinyArray[2], constants), resolve<float>(tinyArray[3], constants));
                     }
                 throw new InvalidDataException($"Incorrect four side format: {data}");
             },
