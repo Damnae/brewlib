@@ -7,6 +7,12 @@ namespace BrewLib.Audio
     {
         private readonly string path;
         private int stream;
+        
+        private readonly float frequency;
+        /// <summary>
+        /// Samples per second
+        /// </summary>
+        public float Frequency => frequency;
 
         public double Duration { get; }
 
@@ -15,6 +21,8 @@ namespace BrewLib.Audio
             this.path = path;
             stream = Bass.CreateStream(path, 0, 0, BassFlags.Decode | BassFlags.Prescan);
             Duration = Bass.ChannelBytes2Seconds(stream, Bass.ChannelGetLength(stream));
+
+            Bass.ChannelGetAttribute(stream, ChannelAttribute.Frequency, out frequency);
         }
 
         public float[] GetFft(double time)
