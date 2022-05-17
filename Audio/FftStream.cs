@@ -7,7 +7,8 @@ namespace BrewLib.Audio
     {
         private readonly string path;
         private int stream;
-        
+        private ChannelInfo info;
+
         private readonly float frequency;
         /// <summary>
         /// Samples per second
@@ -21,17 +22,27 @@ namespace BrewLib.Audio
             this.path = path;
             stream = Bass.CreateStream(path, 0, 0, BassFlags.Decode | BassFlags.Prescan);
             Duration = Bass.ChannelBytes2Seconds(stream, Bass.ChannelGetLength(stream));
+            info = Bass.ChannelGetInfo(stream);
 
             Bass.ChannelGetAttribute(stream, ChannelAttribute.Frequency, out frequency);
         }
 
-        public float[] GetFft(double time)
+        public float[] GetFft(double time, bool splitChannels = false)
         {
             var position = Bass.ChannelSeconds2Bytes(stream, time);
             Bass.ChannelSetPosition(stream, position);
 
-            var data = new float[1024];
-            Bass.ChannelGetData(stream, data, unchecked((int)DataFlags.FFT2048));
+            var size = 1024;
+            var flags = DataFlags.FFT2048;
+
+            if (splitChannels)
+            {
+                size *= info.Channels;
+                flags |= DataFlags.FFTIndividual;
+            }
+
+            var data = new float[size];
+            Bass.ChannelGetData(stream, data, unchecked((int)flags));
             return data;
         }
 
