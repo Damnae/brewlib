@@ -375,7 +375,7 @@ namespace BrewLib.UserInterface
                 clickTargets[e.Button] = null;
 
             var target = clickTarget ?? HoveredWidget ?? rootContainer;
-            return fire((w, evt) => w.NotifyClickUp(evt, e), target, relatedTarget: HoveredWidget).Handled;
+            return fire((w, evt) => w.NotifyClickUp(evt, e), target, relatedTarget: HoveredWidget ?? rootContainer).Handled;
         }
 
         public void OnMouseMove(MouseMoveEventArgs e)
