@@ -3,6 +3,7 @@ using ManagedBass;
 using ManagedBass.Fx;
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 
@@ -21,7 +22,7 @@ namespace BrewLib.Audio
             var flags = BassFlags.Decode | BassFlags.Prescan;
 
             decodeStream = Bass.CreateStream(path, 0, 0, flags);
-            if (decodeStream == 0)
+            if (decodeStream == 0 && !System.IO.Path.IsPathRooted(path))
             {
                 var resourceStream = resourceContainer.GetStream(path, ResourceSource.Embedded);
                 if (resourceStream != null)
