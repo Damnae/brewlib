@@ -2,6 +2,7 @@
 using ManagedBass;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace BrewLib.Audio
 {
@@ -25,7 +26,37 @@ namespace BrewLib.Audio
 
         public AudioManager(IntPtr windowHandle)
         {
-            Bass.Init(-1, 44100, DeviceInitFlags.Default, windowHandle);
+            Trace.WriteLine($"Initializing audio - Bass {Bass.Version}");
+            for (var i = 0; i < Bass.DeviceCount; i++)
+            {
+                var device = Bass.GetDeviceInfo(i);
+                Trace.WriteLine($"Audio device - {device.Name}, {device.Driver}, {device.Type}, default:{device.IsDefault}, enabled:{device.IsEnabled}, init:{device.IsInitialized}, loopback:{device.IsLoopback}");
+            }
+
+            if (!Bass.Init(-1, 44100, DeviceInitFlags.Default, windowHandle))
+            {
+                Trace.WriteLine($"Failed to initialize audio with default device: {Bass.LastError}");
+
+                var initialized = false;
+                for (var i = 0; i < Bass.DeviceCount; i++)
+                {
+                    var device = Bass.GetDeviceInfo(i);
+                    if (device.Driver == null || device.IsDefault)
+                        continue;
+
+                    if (Bass.Init(i, 44100, DeviceInitFlags.Default, windowHandle))
+                    {
+                        initialized = true;
+                        break;
+                    }
+
+                    Trace.WriteLine($"Failed to initialize audio with device {i}: {Bass.LastError}");
+                }
+
+                if (!initialized)
+                    throw new Exception($"Failed to initialize audio - {Bass.LastError}");
+            }
+
             Bass.PlaybackBufferLength = 100;
             Bass.NetBufferLength = 500;
             Bass.UpdatePeriod = 10;
