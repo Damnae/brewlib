@@ -5,7 +5,6 @@ using OpenTK;
 using OpenTK.Graphics;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace BrewLib.ScreenLayers
 {

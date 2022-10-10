@@ -3,7 +3,6 @@ using ManagedBass;
 using ManagedBass.Fx;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Runtime.InteropServices;
 
