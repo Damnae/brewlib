@@ -51,6 +51,9 @@ namespace BrewLib.Graphics.Renderers
         #endregion
 
         private Shader shader;
+        private readonly int combinedMatrixLocation;
+        private readonly int textureUniformLocation;
+
         public Shader Shader => ownsShader ? null : shader;
         private readonly bool ownsShader;
 
@@ -116,6 +119,9 @@ namespace BrewLib.Graphics.Renderers
             this.maxQuadsPerBatch = maxQuadsPerBatch;
             this.shader = shader;
 
+            combinedMatrixLocation = shader.GetUniformLocation(CombinedMatrixUniformName);
+            textureUniformLocation = shader.GetUniformLocation(TextureUniformName);
+
             var primitiveBatchSize = Math.Max(maxQuadsPerBatch, primitiveBufferSize / (VertexPerQuad * VertexDeclaration.VertexSize));
             primitiveStreamer = createPrimitiveStreamer(VertexDeclaration, primitiveBatchSize * VertexPerQuad);
 
@@ -180,13 +186,13 @@ namespace BrewLib.Graphics.Renderers
             if (!lastFlushWasBuffered)
             {
                 var combinedMatrix = transformMatrix * Camera.ProjectionView;
-                GL.UniformMatrix4(shader.GetUniformLocation(CombinedMatrixUniformName), false, ref combinedMatrix);
+                GL.UniformMatrix4(combinedMatrixLocation, false, ref combinedMatrix);
 
                 var samplerUnit = CustomTextureBind != null ? CustomTextureBind(currentTexture) : DrawState.BindTexture(currentTexture);
                 if (currentSamplerUnit != samplerUnit)
                 {
                     currentSamplerUnit = samplerUnit;
-                    GL.Uniform1(shader.GetUniformLocation(TextureUniformName), currentSamplerUnit);
+                    GL.Uniform1(textureUniformLocation, currentSamplerUnit);
                 }
 
                 FlushAction?.Invoke();

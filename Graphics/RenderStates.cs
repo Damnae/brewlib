@@ -27,8 +27,11 @@ namespace BrewLib.Graphics
         public void Apply()
         {
             var flushed = false;
-            foreach (var field in fields.Where(f => !f.IsStatic))
+            foreach (var field in fields)
             {
+                if (field.IsStatic)
+                    continue;
+
                 var newState = (RenderState)field.GetValue(this);
 
                 if (currentStates.TryGetValue(field.FieldType, out RenderState currentState) && currentState.Equals(newState))

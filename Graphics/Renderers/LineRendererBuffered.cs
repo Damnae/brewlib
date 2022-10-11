@@ -45,6 +45,8 @@ namespace BrewLib.Graphics.Renderers
         #endregion
 
         private Shader shader;
+        private readonly int combinedMatrixLocation;
+
         public Shader Shader => ownsShader ? null : shader;
         private readonly bool ownsShader;
 
@@ -117,6 +119,8 @@ namespace BrewLib.Graphics.Renderers
             this.maxLinesPerBatch = maxLinesPerBatch;
             this.shader = shader;
 
+            combinedMatrixLocation = shader.GetUniformLocation(CombinedMatrixUniformName);
+
             var primitiveBatchSize = Math.Max(maxLinesPerBatch, primitiveBufferSize / (VertexPerLine * VertexDeclaration.VertexSize));
             primitiveStreamer = createPrimitiveStreamer(VertexDeclaration, primitiveBatchSize * VertexPerLine);
 
@@ -177,7 +181,7 @@ namespace BrewLib.Graphics.Renderers
             if (!lastFlushWasBuffered)
             {
                 var combinedMatrix = transformMatrix * Camera.ProjectionView;
-                GL.UniformMatrix4(shader.GetUniformLocation(CombinedMatrixUniformName), false, ref combinedMatrix);
+                GL.UniformMatrix4(combinedMatrixLocation, false, ref combinedMatrix);
 
                 FlushAction?.Invoke();
             }
