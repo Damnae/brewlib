@@ -411,24 +411,24 @@ namespace BrewLib.UserInterface
                     actualAnchorTarget.UpdateAnchoring(iteration, false);
                     absolutePosition = actualAnchorTarget.absolutePosition + offset;
 
-                    if (anchorFrom.HasFlag(BoxAlignment.Right))
+                    if ((anchorFrom & BoxAlignment.Right) > 0)
                         absolutePosition.X -= size.X;
-                    else if (!anchorFrom.HasFlag(BoxAlignment.Left))
+                    else if ((anchorFrom & BoxAlignment.Left) == 0)
                         absolutePosition.X -= size.X * 0.5f;
 
-                    if (anchorFrom.HasFlag(BoxAlignment.Bottom))
+                    if ((anchorFrom & BoxAlignment.Bottom) > 0)
                         absolutePosition.Y -= size.Y;
-                    else if (!anchorFrom.HasFlag(BoxAlignment.Top))
+                    else if ((anchorFrom & BoxAlignment.Top) == 0)
                         absolutePosition.Y -= size.Y * 0.5f;
 
-                    if (anchorTo.HasFlag(BoxAlignment.Right))
+                    if ((anchorTo & BoxAlignment.Right) > 0)
                         absolutePosition.X += actualAnchorTarget.Size.X;
-                    else if (!anchorTo.HasFlag(BoxAlignment.Left))
+                    else if ((anchorTo & BoxAlignment.Left) == 0)
                         absolutePosition.X += actualAnchorTarget.Size.X * 0.5f;
 
-                    if (anchorTo.HasFlag(BoxAlignment.Bottom))
+                    if ((anchorTo & BoxAlignment.Bottom) > 0)
                         absolutePosition.Y += actualAnchorTarget.Size.Y;
-                    else if (!anchorTo.HasFlag(BoxAlignment.Top))
+                    else if ((anchorTo & BoxAlignment.Top) == 0)
                         absolutePosition.Y += actualAnchorTarget.Size.Y * 0.5f;
                 }
                 else absolutePosition = offset;

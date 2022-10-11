@@ -27,13 +27,13 @@ namespace BrewLib.UserInterface
                 var textSize = new Vector2(Math.Min(textDrawable.Size.X, size.X), Math.Min(textDrawable.Size.Y, size.Y));
 
                 var alignment = textDrawable.Alignment;
-                if (alignment.HasFlag(BoxAlignment.Right))
+                if ((alignment & BoxAlignment.Right) > 0)
                     position.X += size.X - textSize.X;
-                else if (!alignment.HasFlag(BoxAlignment.Left))
+                else if ((alignment & BoxAlignment.Left) == 0)
                     position.X += size.X * 0.5f - textSize.X * 0.5f;
-                if (alignment.HasFlag(BoxAlignment.Bottom))
+                if ((alignment & BoxAlignment.Bottom) > 0)
                     position.Y += size.Y - textSize.Y;
-                else if (!alignment.HasFlag(BoxAlignment.Top))
+                else if ((alignment & BoxAlignment.Top) == 0)
                     position.Y += size.Y * 0.5f - textSize.Y * 0.5f;
 
                 position = Manager.SnapToPixel(position);

@@ -189,8 +189,8 @@ namespace BrewLib.Graphics.Text
         public int Height => height;
 
         public Vector2 Position => new Vector2(
-            alignment.HasFlag(BoxAlignment.Left) ? 0 :
-                alignment.HasFlag(BoxAlignment.Right) ?
+            (alignment & BoxAlignment.Left) > 0 ? 0 :
+                (alignment & BoxAlignment.Right) > 0 ?
                     layout.Size.X - width :
                     layout.Size.X * 0.5f - width * 0.5f,
             y);

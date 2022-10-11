@@ -47,10 +47,10 @@ namespace BrewLib.Util
             => !(left == right);
 
         public float GetHorizontalOffset(BoxAlignment alignment)
-           => alignment.HasFlag(BoxAlignment.Left) ? Left : alignment.HasFlag(BoxAlignment.Right) ? -Right : 0;
+           => (alignment & BoxAlignment.Left) > 0 ? Left : (alignment & BoxAlignment.Right) > 0 ? -Right : 0;
 
         public float GetVerticalOffset(BoxAlignment alignment)
-           => alignment.HasFlag(BoxAlignment.Top) ? Top : alignment.HasFlag(BoxAlignment.Bottom) ? -Bottom : 0;
+           => (alignment & BoxAlignment.Top) > 0 ? Top : (alignment & BoxAlignment.Bottom) > 0 ? -Bottom : 0;
 
         public Vector2 GetOffset(BoxAlignment alignment)
            => new Vector2(GetHorizontalOffset(alignment), GetVerticalOffset(alignment));
