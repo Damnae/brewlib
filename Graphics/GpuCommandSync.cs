@@ -150,7 +150,6 @@ namespace BrewLib.Graphics
                             return blocked;
 
                         case WaitSyncStatus.ConditionSatisfied:
-                            Debug.Assert(blocked); // Should never happen
                             expired = true;
                             return true;
 
