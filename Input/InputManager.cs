@@ -2,6 +2,7 @@
 using OpenTK.Input;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace BrewLib.Input
 {
@@ -15,15 +16,22 @@ namespace BrewLib.Input
         public bool HasMouseFocus => window.Focused && hasMouseHover;
         public bool HasWindowFocus => window.Focused;
 
-        public MouseDevice Mouse => window.Mouse;
-        public KeyboardDevice Keyboard => window.Keyboard;
+        public MouseState Mouse => OpenTK.Input.Mouse.GetCursorState();
+        public KeyboardState Keyboard => OpenTK.Input.Keyboard.GetState();
 
         private Dictionary<int, GamepadManager> gamepadManagers = new Dictionary<int, GamepadManager>();
         public IEnumerable<GamepadManager> GamepadManagers => gamepadManagers.Values;
         public GamepadManager GetGamepadManager(int gamepadIndex = 0) => gamepadManagers[gamepadIndex];
 
         // Helpers
-        public Vector2 MousePosition => new Vector2(Mouse.X, Mouse.Y);
+        public Vector2 MousePosition
+        {
+            get
+            {
+                var clientCoords = window.PointToClient(new Point(Mouse.X, Mouse.Y));
+                return new Vector2(clientCoords.X, clientCoords.Y);
+            }
+        }
 
         public bool Control { get; private set; }
         public bool Shift { get; private set; }
@@ -112,7 +120,7 @@ namespace BrewLib.Input
         }
         private void window_MouseLeave(object sender, EventArgs e)
         {
-            // https://github.com/opentk/opentk/issues/301
+            // https://github.com/OpenTK/OpenTK/issues/301
             return;
 
             hasMouseHover = false;
@@ -134,11 +142,9 @@ namespace BrewLib.Input
         private void window_KeyUp(object sender, KeyboardKeyEventArgs e) { updateModifierState(e); handler.OnKeyUp(e); }
         private void window_KeyPress(object sender, KeyPressEventArgs e) => handler.OnKeyPress(e);
 
-        private bool dedupeMouseWheel;
         private void window_MouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (dedupeMouseWheel = !dedupeMouseWheel)
-                handler.OnMouseWheel(e);
+            handler.OnMouseWheel(e);
         }
 
         private void gamepadManager_OnConnected(object sender, GamepadEventArgs e) => handler.OnGamepadConnected(e);
