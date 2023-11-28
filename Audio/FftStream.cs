@@ -17,6 +17,8 @@ namespace BrewLib.Audio
 
         public double Duration { get; }
 
+        static FftStream() => NativeBass.SetBassDllPath();
+
         public FftStream(string path)
         {
             this.path = path;

@@ -24,6 +24,8 @@ namespace BrewLib.Audio
             }
         }
 
+        static AudioManager() => NativeBass.SetBassDllPath();
+
         public AudioManager(IntPtr windowHandle)
         {
             Trace.WriteLine($"Initializing audio - Bass {Bass.Version}");
