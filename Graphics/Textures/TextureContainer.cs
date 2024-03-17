@@ -8,6 +8,7 @@ namespace BrewLib.Graphics.Textures
     public interface TextureContainer : IDisposable
     {
         IEnumerable<string> ResourceNames { get; }
+        double UncompressedMemoryUseMb { get; }
         event ResourceLoadedDelegate<Texture2dRegion> ResourceLoaded;
 
         Texture2dRegion Get(string filename);

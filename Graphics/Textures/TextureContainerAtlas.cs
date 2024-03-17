@@ -20,6 +20,17 @@ namespace BrewLib.Graphics.Textures
         public IEnumerable<string> ResourceNames
             => textures.Where(e => e.Value != null).Select(e => e.Key);
 
+        public double UncompressedMemoryUseMb
+        {
+            get
+            {
+                ulong pixels = 0;
+                foreach (var texture in textures.Values)
+                    pixels += (ulong)texture.Size.X * (ulong)texture.Size.Y;
+                return pixels / 1024.0 / 1024.0;
+            }
+        }
+
         public event ResourceLoadedDelegate<Texture2dRegion> ResourceLoaded;
 
         public TextureContainerAtlas(ResourceContainer resourceContainer = null, TextureOptions textureOptions = null, int width = 512, int height = 512, int padding = 0, string description = nameof(TextureContainerAtlas))
