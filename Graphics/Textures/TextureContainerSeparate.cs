@@ -21,7 +21,8 @@ namespace BrewLib.Graphics.Textures
             {
                 ulong pixels = 0;
                 foreach (var texture in textures.Values)
-                    pixels += (ulong)texture.Size.X * (ulong)texture.Size.Y;
+                    if (texture != null)
+                        pixels += (ulong)texture.Size.X * (ulong)texture.Size.Y;
                 return pixels / 1024.0 / 1024.0;
             }
         }
