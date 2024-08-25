@@ -432,7 +432,6 @@ namespace BrewLib.Graphics
 
         private static void retrieveRendererInfo()
         {
-            logVideoControllers();
             CheckError("initializing");
 
             var openGlVersionString = GL.GetString(StringName.Version);
@@ -524,31 +523,6 @@ namespace BrewLib.Graphics
                 throw new Exception(
                     (context != null ? "openGL error while " + context : "openGL error") +
                     (error != ErrorCode.NoError ? ": " + error.ToString() : string.Empty));
-        }
-
-        private static void logVideoControllers()
-        {
-            try
-            {
-                // https://msdn.microsoft.com/en-us/library/aa394512(v=vs.85).aspx
-                var searcher = new ManagementObjectSearcher("select * from Win32_VideoController");
-
-                Trace.WriteLine("");
-                Trace.WriteLine("Video controllers:\n");
-                foreach (var o in searcher.Get())
-                {
-                    Trace.WriteLine(o["Name"]);
-                    Trace.WriteLine($"Status: {o["Status"]}, Availability: {o["Availability"]}, ConfigManagerErrorCode: {o["ConfigManagerErrorCode"]}");
-                    Trace.WriteLine($"DriverVersion: {o["DriverVersion"]}, DriverDate: {o["DriverDate"]}, InstalledDisplayDrivers: {o["InstalledDisplayDrivers"]}");
-                    Trace.WriteLine($"VideoProcessor: {o["VideoProcessor"]}, VideoArchitecture: {o["VideoArchitecture"]}, VideoMemoryType: {o["VideoMemoryType"]}, CurrentBitsPerPixel: {o["CurrentBitsPerPixel"]}");
-                    Trace.WriteLine($"AdapterDACType: {o["AdapterDACType"]}, AdapterRAM: {o["AdapterRAM"]}");
-                    Trace.WriteLine("");
-                }
-            }
-            catch (Exception e)
-            {
-                Trace.WriteLine($"Failed to retrieve video controller information: {e}");
-            }
         }
 
         #endregion
