@@ -8,11 +8,8 @@ namespace BrewLib.Util
 {
     public static class Native
     {
-        [DllImport("kernel32.dll", EntryPoint = "CopyMemory", SetLastError = false)]
-        public static extern void CopyMemory(IntPtr dest, IntPtr src, uint count); /* <= .NET 4.X */
-
-        [DllImport("kernel32.dll", EntryPoint = "RtlCopyMemory", SetLastError = false)]
-        public static extern void RtlCopyMemory(IntPtr dest, IntPtr src, uint count); /* .NET 5+ */
+        [DllImport("msvcrt.dll", EntryPoint = "memcpy", CallingConvention = CallingConvention.Cdecl, SetLastError = false)]
+        public static extern void memcpy(IntPtr dest, IntPtr src, uint count);
 
         [DllImport("user32.dll")]
         public static extern void SwitchToThisWindow(IntPtr hWnd, bool fAltTab);
