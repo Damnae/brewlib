@@ -1,7 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace BrewLib.Graphics
 {
