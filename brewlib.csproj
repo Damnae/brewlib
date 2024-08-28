@@ -5,13 +5,16 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <AssemblyName>BrewLib</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
+    <Copyright>Copyright © Damnae 2024</Copyright>
+    <AssemblyVersion>1.0.*</AssemblyVersion>
+    <Deterministic>false</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="ManagedBass" Version="1.0.2" />
     <PackageReference Include="ManagedBass.Fx" Version="1.0.2" />
     <PackageReference Include="OpenTK" Version="2.0.0" />
-    <PackageReference Include="Damnae.Tiny" Version="1.1.0" />
+    <PackageReference Include="Damnae.Tiny" Version="1.2.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
 
