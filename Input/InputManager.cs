@@ -15,15 +15,12 @@ namespace BrewLib.Input
         public bool HasMouseFocus => window.Focused && hasMouseHover;
         public bool HasWindowFocus => window.Focused;
 
-        public MouseDevice Mouse => window.Mouse;
-        public KeyboardDevice Keyboard => window.Keyboard;
-
         private Dictionary<int, GamepadManager> gamepadManagers = new Dictionary<int, GamepadManager>();
         public IEnumerable<GamepadManager> GamepadManagers => gamepadManagers.Values;
         public GamepadManager GetGamepadManager(int gamepadIndex = 0) => gamepadManagers[gamepadIndex];
 
         // Helpers
-        public Vector2 MousePosition => new Vector2(Mouse.X, Mouse.Y);
+        public Vector2 MousePosition { get; private set; }
 
         public bool Control { get; private set; }
         public bool Shift { get; private set; }
@@ -122,7 +119,11 @@ namespace BrewLib.Input
 
         private void window_MouseDown(object sender, MouseButtonEventArgs e) => handler.OnClickDown(e);
         private void window_MouseUp(object sender, MouseButtonEventArgs e) => handler.OnClickUp(e);
-        private void window_MouseMove(object sender, MouseMoveEventArgs e) => handler.OnMouseMove(e);
+        private void window_MouseMove(object sender, MouseMoveEventArgs e)
+        {
+            MousePosition = new Vector2(e.X, e.Y);
+            handler.OnMouseMove(e);
+        }
 
         private void updateModifierState(KeyboardKeyEventArgs e)
         {

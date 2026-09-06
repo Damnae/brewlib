@@ -13,7 +13,7 @@
   <ItemGroup>
     <PackageReference Include="ManagedBass" Version="1.0.2" />
     <PackageReference Include="ManagedBass.Fx" Version="1.0.2" />
-    <PackageReference Include="OpenTK" Version="2.0.0" />
+    <PackageReference Include="OpenTK" Version="3.3.3" />
     <PackageReference Include="Damnae.Tiny" Version="1.2.0" />
     <PackageReference Include="System.Management" Version="8.0.0" />
   </ItemGroup>
